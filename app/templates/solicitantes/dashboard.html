@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Solicitantes{% endblock %}
+{% block head %}
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Dashboard de Solicitantes</h2>
+  <div class="row">
+    <!-- Estadística por Estado -->
+    <div class="col-md-6 mb-4">
+      <div class="card">
+        <div class="card-header">Solicitantes por Estado</div>
+        <div class="card-body">
+          <canvas id="chartEstado"></canvas>
+        </div>
+      </div>
+    </div>
+    <!-- Estadística por Programa -->
+    <div class="col-md-6 mb-4">
+      <div class="card">
+        <div class="card-header">Solicitantes por Programa</div>
+        <div class="card-body">
+          <canvas id="chartPrograma"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Otras métricas si se requieren -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Datos simulados; reemplazar con variables pasadas desde backend
+    const estados = {{ stats_estados | safe }}; // ej: { "Registrado": 10, "En evaluación": 5, ... }
+    const programas = {{ stats_programas | safe }};
+
+    // Chart Estado
+    const ctxE = document.getElementById('chartEstado').getContext('2d');
+    new Chart(ctxE, {
+      type: 'pie',
+      data: {
+        labels: Object.keys(estados),
+        datasets: [{
+          data: Object.values(estados),
+          backgroundColor: ['#007bff','#28a745','#ffc107','#dc3545','#6c757d']
+        }]
+      }
+    });
+
+    // Chart Programa
+    const ctxP = document.getElementById('chartPrograma').getContext('2d');
+    new Chart(ctxP, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(programas),
+        datasets: [{
+          label: 'Cantidad',
+          data: Object.values(programas)
+        }]
+      },
+      options: { scales: { y: { beginAtZero: true } } }
+    });
+  });
+</script>
+{% endblock %}

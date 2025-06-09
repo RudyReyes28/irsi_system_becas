@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Detalle Usuario{% endblock %}
+{% block content %}
+<h2>Detalle de Usuario</h2>
+<table class="table">
+  <tr><th>ID:</th><td>{{ user.id }}</td></tr>
+  <tr><th>Nombre:</th><td>{{ user.nombre }}</td></tr>
+  <tr><th>Correo:</th><td>{{ user.email }}</td></tr>
+  <tr><th>Rol:</th><td>{{ user.rol }}</td></tr>
+  <tr><th>Activo:</th><td>{{ 'Sí' if user.activo else 'No' }}</td></tr>
+  <tr><th>Fecha Creación:</th><td>{{ user.fecha_creacion }}</td></tr>
+  <tr><th>Último Acceso:</th><td>{{ user.ultimo_acceso }}</td></tr>
+</table>
+<a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-warning">Editar</a>
+<a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}

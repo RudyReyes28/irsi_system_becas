@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}Formulario Solicitante{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ solicitante and 'Editar Solicitante' or 'Nuevo Solicitante' }}</h2>
+  <form id="multiStepForm"
+        method="post"
+        enctype="multipart/form-data"
+        action="{{ url_for('solicitantes.create_solicitante') }}">
+    {{ form.hidden_tag() }}
+
+    <!-- Paso 1: Datos Personales -->
+<div class="step" id="step-1">
+  <h4>Datos Personales</h4>
+  <div class="mb-3">
+    {{ form.nombre.label(class="form-label") }}
+    {{ form.nombre(class="form-control") }}
+    {% for error in form.nombre.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.emails.label(class="form-label") }}
+    {{ form.emails(class="form-control") }}
+    {% for error in form.emails.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.documento.label(class="form-label") }}
+    {{ form.documento(class="form-control") }}
+    {% for error in form.documento.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.fecha_nacimiento.label(class="form-label") }}
+    {{ form.fecha_nacimiento(class="form-control", type="date") }}
+    {% for error in form.fecha_nacimiento.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.genero.label(class="form-label") }}
+    {{ form.genero(class="form-select") }}
+    {% for error in form.genero.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.pais.label(class="form-label") }}
+    {{ form.pais(class="form-select") }}
+    {% for error in form.pais.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.ciudad.label(class="form-label") }}
+    {{ form.ciudad(class="form-control") }}
+    {% for error in form.ciudad.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.telefonos.label(class="form-label") }}
+    {{ form.telefonos(class="form-control") }}
+    {% for error in form.telefonos.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <button type="button" class="btn btn-primary next-step">Siguiente</button>
+</div>
+
+<!-- Paso 2: Datos Académicos -->
+<div class="step d-none" id="step-2">
+  <h4>Datos Académicos</h4>
+  <div class="mb-3">
+    {{ form.nivel_educativo.label(class="form-label") }}
+    {{ form.nivel_educativo(class="form-select") }}
+    {% for error in form.nivel_educativo.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.institucion.label(class="form-label") }}
+    {{ form.institucion(class="form-control") }}
+    {% for error in form.institucion.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.promedio.label(class="form-label") }}
+    {{ form.promedio(class="form-control") }}
+    {% for error in form.promedio.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.experiencia_tech.label(class="form-label") }}
+    {{ form.experiencia_tech(class="form-control", rows=3) }}
+    {% for error in form.experiencia_tech.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <button type="button" class="btn btn-secondary prev-step">Anterior</button>
+  <button type="button" class="btn btn-primary next-step">Siguiente</button>
+</div>
+
+<!-- Paso 3: Información Socioeconómica -->
+<div class="step d-none" id="step-3">
+  <h4>Información Socioeconómica</h4>
+  <div class="mb-3">
+    {{ form.situacion_laboral.label(class="form-label") }}
+    {{ form.situacion_laboral(class="form-control") }}
+    {% for error in form.situacion_laboral.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.ingresos.label(class="form-label") }}
+    {{ form.ingresos(class="form-control") }}
+    {% for error in form.ingresos.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.acceso_tecnologia.label(class="form-label") }}
+    {{ form.acceso_tecnologia(class="form-select") }}
+    {% for error in form.acceso_tecnologia.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.dependientes.label(class="form-label") }}
+    {{ form.dependientes(class="form-control") }}
+    {% for error in form.dependientes.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <button type="button" class="btn btn-secondary prev-step">Anterior</button>
+  <button type="button" class="btn btn-primary next-step">Siguiente</button>
+</div>
+
+<!-- Paso 4: Información del Programa -->
+<div class="step d-none" id="step-4">
+  <h4>Información del Programa</h4>
+  <div class="mb-3">
+    {{ form.programa_solicitado.label(class="form-label") }}
+    {{ form.programa_solicitado(class="form-select") }}
+    {% for error in form.programa_solicitado.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.modalidad.label(class="form-label") }}
+    {{ form.modalidad(class="form-select") }}
+    {% for error in form.modalidad.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.disponibilidad.label(class="form-label") }}
+    {{ form.disponibilidad(class="form-control") }}
+    {% for error in form.disponibilidad.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.motivacion.label(class="form-label") }}
+    {{ form.motivacion(class="form-control", rows=3) }}
+    {% for error in form.motivacion.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <div class="mb-3">
+    {{ form.objetivos.label(class="form-label") }}
+    {{ form.objetivos(class="form-control", rows=3) }}
+    {% for error in form.objetivos.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+  </div>
+  <button type="button" class="btn btn-secondary prev-step">Anterior</button>
+  <button type="submit" class="btn btn-success">Guardar</button>
+</div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/solicitantes.js') }}"></script>
+{% endblock %}

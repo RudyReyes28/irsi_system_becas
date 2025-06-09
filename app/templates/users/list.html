@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Listado de Usuarios{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Usuarios</h2>
+  <a href="{{ url_for('users.create_user') }}" class="btn btn-primary">Crear Usuario</a>
+</div>
+<form method="get" class="mb-3">
+  <div class="input-group">
+    <input type="text" name="search" class="form-control" placeholder="Buscar por correo" value="{{ search }}">
+    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+  </div>
+</form>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Correo</th>
+      <th>Rol</th>
+      <th>Activo</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in pagination.items %}
+    <tr>
+      <td>{{ user.id }}</td>
+      <td>{{ user.nombre }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.rol }}</td>
+      <td>
+        <input type="checkbox" class="active-toggle" data-id="{{ user.id }}" {% if user.activo %}checked{% endif %}>
+      </td>
+      <td>
+        <a href="{{ url_for('users.detail_user', user_id=user.id) }}" class="btn btn-sm btn-info">Ver</a>
+        <a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-sm btn-warning">Editar</a>
+        <button class="btn btn-sm btn-danger delete-btn" data-id="{{ user.id }}">Eliminar</button>
+        <a href="{{ url_for('users.reset_password', user_id=user.id) }}" class="btn btn-sm btn-secondary">Resetear Contraseña</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<nav>
+  <ul class="pagination">
+    {% if pagination.has_prev %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ pagination.prev_num }}&search={{ search }}">Anterior</a>
+      </li>
+    {% endif %}
+    {% for page_num in pagination.iter_pages() %}
+      {% if page_num %}
+        <li class="page-item {% if pagination.page == page_num %}active{% endif %}">
+          <a class="page-link" href="?page={{ page_num }}&search={{ search }}">{{ page_num }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ pagination.next_num }}&search={{ search }}">Siguiente</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+{% endblock %}

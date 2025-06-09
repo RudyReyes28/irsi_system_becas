@@ -1,0 +1,13 @@
+{# app/templates/403.html #}
+
+{% block title %}403 - Acceso Denegado{% endblock %}
+
+{% block content %}
+  <div class="text-center mt-5">
+    <h1 class="display-4">403</h1>
+    <p class="lead">Acceso Denegado: No tienes permiso para ver esta página.</p>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-primary mt-3">
+      Regresar al Inicio
+    </a>
+  </div>
+{% endblock %}

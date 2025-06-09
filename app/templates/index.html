@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Bienvenido, {{ current_user.nombre }} 👋</h1>
+  
+  {% if rol == 'Administrador' %}
+    <p class="lead">Panel de administrador. Puedes gestionar usuarios, roles y revisar auditorías.</p>
+    <a href="{{ url_for('users.list_users') }}" class="btn btn-primary">Gestión de Usuarios</a>
+    <a href="{{url_for('solicitantes.list_solicitantes') }}" class="btn btn-primary">Gestión de Solicitantes</a>
+    
+  
+  {% elif rol == 'Director' %}
+    <p class="lead">Panel de director. Revisa estadísticas y aprueba solicitudes.</p>
+    <a href="#" class="btn btn-info">Ver Reportes</a>
+  
+  {% elif rol == 'Asistente' %}
+    <p class="lead">Panel de asistente. Ingresa y edita solicitudes de beca.</p>
+    <a href="#" class="btn btn-secondary">Gestionar Solicitudes</a>
+
+  {% elif rol == 'Consulta' %}
+    <p class="lead">Panel de solo lectura. Puedes consultar información del sistema.</p>
+    <a href="#" class="btn btn-outline-secondary">Ver Información</a>
+
+  {% else %}
+    <p class="text-warning">Tu rol no tiene acceso definido.</p>
+  {% endif %}
+</div>
+{% endblock %}

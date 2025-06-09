@@ -1,0 +1,102 @@
+<!-- app/templates/solicitantes/list.html -->
+{% extends 'base.html' %}
+{% block title %}Listado Solicitantes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Solicitantes</h2>
+    <a href="{{ url_for('solicitantes.create_solicitante') }}" class="btn btn-primary">Nuevo Solicitante</a>
+  </div>
+  <!-- Filtros Avanzados -->
+  <form method="get" class="mb-3">
+    <div class="row">
+      <div class="col-md-3">
+        <input type="text" name="nombre" class="form-control" placeholder="Nombre" value="{{ filtros.nombre }}">
+      </div>
+      <div class="col-md-3">
+        <select name="programa" class="form-select">
+          <option value="">Programa</option>
+          {% for val, label in form.programa_solicitado.choices %}
+            <option value="{{ val }}" {% if filtros.programa == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="estado" class="form-select">
+          <option value="">Estado</option>
+          {% for estado in ['Registrado','En revisión','Aprobado','Rechazado'] %}
+            <option value="{{ estado }}" {% if filtros.estado == estado %}selected{% endif %}>{{ estado }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="pais" class="form-select">
+          <option value="">País</option>
+          {% for val, label in form.pais.choices %}
+            <option value="{{ val }}" {% if filtros.pais == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="row mt-2">
+      <div class="col-md-12 text-end">
+        <button type="submit" class="btn btn-outline-secondary">Filtrar</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table table-bordered table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Programa</th>
+        <th>Estado</th>
+        <th>Fecha Registro</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sol in pagination.items %}
+      <tr>
+        <td>{{ sol.id }}</td>
+        <td>{{ sol.nombre }}</td>
+        <td>{{ sol.emails }}</td>
+        <td>{{ sol.programa_legible }}</td>
+        <td>{{ sol.estado_legible  }}</td>
+        <td>{{ sol.fecha_registro.strftime('%Y-%m-%d') }}</td>
+        <td>
+          <a href="{{ url_for('solicitantes.detail_solicitante', solicitante_id=sol.id) }}" class="btn btn-sm btn-info">Ver</a>
+          {% if current_user.rol in ['Administrador','Director','Asistente'] %}
+            <a href="{{ url_for('solicitantes.edit_solicitante', solicitante_id=sol.id) }}" class="btn btn-sm btn-warning">Editar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <nav>
+    <ul class="pagination">
+      {% if pagination.has_prev %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ pagination.prev_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">Anterior</a>
+        </li>
+      {% endif %}
+      {% for page_num in pagination.iter_pages() %}
+        {% if page_num %}
+          <li class="page-item {% if pagination.page == page_num %}active{% endif %}">
+            <a class="page-link" href="?page={{ page_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">{{ page_num }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+      {% if pagination.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ pagination.next_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">Siguiente</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endblock %}

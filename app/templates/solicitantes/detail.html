@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Detalle Solicitante{% endblock %}
+{% block head %}
+  <style>
+    .drop-zone {
+      border: 2px dashed #6c757d;
+      border-radius: 5px;
+      padding: 20px;
+      text-align: center;
+      color: #6c757d;
+      cursor: pointer;
+    }
+    .drop-zone.dragover {
+      background-color: #e9ecef;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Detalle de Solicitante: {{ solicitante.nombre }}</h2>
+  <!-- Datos básicos -->
+  <table class="table table-striped">
+    <tr><th>Email:</th><td>{{ solicitante.email }}</td></tr>
+    <tr><th>Documento:</th><td>{{ solicitante.documento }}</td></tr>
+    <tr><th>Programa:</th><td>{{ solicitante.programa_solicitado }}</td></tr>
+    <tr><th>Estado:</th><td>{{ solicitante.estado }}</td></tr>
+    <!-- Agrega más campos según necesidad -->
+  </table>
+
+  <!-- Historial de Estados -->
+  <h5>Historial de Estados</h5>
+  <ul class="list-group mb-4">
+    {% for h in historial %}
+    <li class="list-group-item d-flex justify-content-between">
+      <div>
+        <strong>{{ h.estado }}</strong> por {{ h.usuario.nombre }}<br>
+        <small>{{ h.fecha.strftime('%Y-%m-%d %H:%M') }}</small>
+        {% if h.comentario %}<br><small>Comentario: {{ h.comentario }}</small>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <!-- Carga de Documentos Drag & Drop -->
+  <h5>Documentos</h5>
+  <div id="dropZone" class="drop-zone mb-3">
+    Arrastra archivos aquí o haz clic para seleccionar
+  </div>
+  <form id="fileForm" method="post" enctype="multipart/form-data" action="{{ url_for('solicitantes.upload_document', solicitante_id=solicitante.id) }}">
+    <input type="file" name="documento" id="fileInput" class="d-none">
+  </form>
+  <ul class="list-group">
+    {% for doc in documentos %}
+      <li class="list-group-item">{{ doc }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/solicitantes.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileForm = document.getElementById('fileForm');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        fileForm.submit();
+      }
+    });
+
+    fileInput.addEventListener('change', () => fileForm.submit());
+  });
+</script>
+{% endblock %}
