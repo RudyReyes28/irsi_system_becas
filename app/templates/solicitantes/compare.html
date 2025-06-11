@@ -3,32 +3,68 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Comparación de Aplicaciones</h2>
+
+  <!-- Formulario para elegir las dos aplicaciones -->
+  <form method="post" class="row g-3 mb-4">
+    <div class="col-md-5">
+      <label for="app1" class="form-label">Aplicación 1</label>
+      <select id="app1" name="app1" class="form-select">
+        {% for s in aplicaciones %}
+          <option value="{{ s.id }}" {% if s.id == app1.id %}selected{% endif %}>
+            {{ s.fecha_registro.strftime('%Y-%m-%d') }} &mdash; {{ s.programa_legible }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 text-center align-self-end">
+      <button type="submit" class="btn btn-primary">Comparar →</button>
+    </div>
+    <div class="col-md-5">
+      <label for="app2" class="form-label">Aplicación 2</label>
+      <select id="app2" name="app2" class="form-select">
+        <option value="">-- Selecciona segunda aplicación --</option>
+        {% for s in aplicaciones %}
+          {% if s.id != app1.id %}
+            <option value="{{ s.id }}" {% if app2 and s.id == app2.id %}selected{% endif %}>
+              {{ s.fecha_registro.strftime('%Y-%m-%d') }} &mdash; {{ s.programa_legible }}
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  {% if app2 %}
+  <!-- Mostrar comparación sólo si hay dos aplicaciones seleccionadas -->
   <div class="row">
     <div class="col-md-5">
-      <h5>Aplicación Anterior</h5>
+      <h5>Aplicación 1</h5>
       <ul class="list-group">
-        <li class="list-group-item"><strong>Nombre:</strong> {{ anterior.nombre }}</li>
-        <li class="list-group-item"><strong>Email:</strong> {{ anterior.email }}</li>
-        <li class="list-group-item"><strong>Documento:</strong> {{ anterior.documento }}</li>
-        <li class="list-group-item"><strong>Promedio:</strong> {{ anterior.promedio }}</li>
-        <li class="list-group-item"><strong>Motivación:</strong> <pre>{{ anterior.motivacion }}</pre></li>
-        <!-- Agrega más campos según necesites -->
+        <li class="list-group-item"><strong>Nombre:</strong> {{ app1.nombre }}</li>
+        <li class="list-group-item"><strong>Email:</strong> {{ app1.emails }}</li>
+        <li class="list-group-item"><strong>Documento:</strong> {{ app1.documento }}</li>
+        <li class="list-group-item"><strong>Programa:</strong> {{ app1.programa_legible }}</li>
+        <li class="list-group-item"><strong>Motivación:</strong> <pre>{{ app1.motivacion }}</pre></li>
+        <!-- Más campos según modelo -->
       </ul>
     </div>
+
     <div class="col-md-2 text-center">
-      <i class="bi bi-arrow-right fs-1 my-4"></i>  <!-- ícono de flecha -->
+      <i class="bi bi-arrow-right fs-1 my-4"></i>
     </div>
+
     <div class="col-md-5">
-      <h5>Nueva Aplicación</h5>
+      <h5>Aplicación 2</h5>
       <ul class="list-group">
-        <li class="list-group-item"><strong>Nombre:</strong> {{ nueva.nombre }}</li>
-        <li class="list-group-item"><strong>Email:</strong> {{ nueva.email }}</li>
-        <li class="list-group-item"><strong>Documento:</strong> {{ nueva.documento }}</li>
-        <li class="list-group-item"><strong>Promedio:</strong> {{ nueva.promedio }}</li>
-        <li class="list-group-item"><strong>Motivación:</strong> <pre>{{ nueva.motivacion }}</pre></li>
-        <!-- Agrega más campos según necesites -->
+        <li class="list-group-item"><strong>Nombre:</strong> {{ app2.nombre }}</li>
+        <li class="list-group-item"><strong>Email:</strong> {{ app2.emails }}</li>
+        <li class="list-group-item"><strong>Documento:</strong> {{ app2.documento }}</li>
+        <li class="list-group-item"><strong>Programa:</strong> {{ app2.programa_legible }}</li>
+        <li class="list-group-item"><strong>Motivación:</strong> <pre>{{ app2.motivacion }}</pre></li>
+        <!-- Más campos según modelo -->
       </ul>
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

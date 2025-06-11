@@ -57,8 +57,7 @@ def create_solicitante():
             # 1) Detección de reaplicación
             previo = detectar_reaplicacion(datos['emails'], datos['documento'])
             if previo:
-                flash('Se ha detectado una reaplicación. Revisar historial.', 'warning')
-                return redirect(url_for('solicitantes.detail_solicitante', solicitante_id=previo.id))
+                flash('Nota: ya existe una aplicación previa con este email o documento. Se creará una nueva entrada.', 'info')
 
             # 2) Crear el objeto Solicitante
             solicitante = Solicitante(
@@ -114,11 +113,28 @@ def create_solicitante():
 @login_required
 @require_role('Administrador', 'Director', 'Asistente', 'Consulta')
 def detail_solicitante(solicitante_id):
-    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    sol = Solicitante.query.get_or_404(solicitante_id)
+
     historial = HistorialEstado.query.filter_by(solicitante_id=solicitante_id).order_by(HistorialEstado.fecha.desc()).all()    
-    #documentos = solicitante.listar_documentos()
-    documentos = None
-    return render_template('solicitantes/detail.html', solicitante=solicitante, historial=historial, documentos=documentos)
+    try:
+        documentos = sol.listar_documentos()
+    except AttributeError:
+        documentos = []
+
+    # contar reaplicaciones
+    reaplicaciones = Solicitante.query.filter(
+        (Solicitante.emails == sol.emails) | 
+        (Solicitante.documento == sol.documento)
+    ).order_by(Solicitante.fecha_registro.asc()).all()
+    mostrar_compare = len(reaplicaciones) > 1
+    return render_template(
+        'solicitantes/detail.html',
+        solicitante=sol,
+        historial=historial,
+        documentos=documentos,
+        EstadoSolicitud=EstadoSolicitud,
+        mostrar_compare=mostrar_compare
+    )
 
 @solicitantes_bp.route('/<int:solicitante_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -129,13 +145,13 @@ def edit_solicitante(solicitante_id):
     if request.method == 'POST' and form.validate():
         datos = form.data
         solicitante.nombre = datos['nombre']
-        solicitante.emails=datos['email'],
+        solicitante.emails=datos['emails']
         solicitante.documento = datos['documento']
         solicitante.fecha_nacimiento = datos['fecha_nacimiento']
         solicitante.genero = datos['genero']
         solicitante.pais = datos['pais']
         solicitante.ciudad = datos['ciudad']
-        solicitante.telefonos = datos['telefono']
+        solicitante.telefonos = datos['telefonos']
         solicitante.nivel_educativo = datos['nivel_educativo']
         solicitante.institucion = datos['institucion']
         solicitante.promedio = datos['promedio']
@@ -183,7 +199,39 @@ def upload_document(solicitante_id):
     os.makedirs(camino, exist_ok=True)
     ruta_archivo = os.path.join(camino, filename)
     file.save(ruta_archivo)
-    solicitante.agregar_documento(filename)
+    #solicitante.agregar_documento(filename)
     db.session.commit()
     flash('Documento subido exitosamente.', 'success')
     return redirect(url_for('solicitantes.detail_solicitante', solicitante_id=solicitante_id))
+
+
+@solicitantes_bp.route('/<int:solicitante_id>/compare', methods=['GET', 'POST'])
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def compare_solicitante(solicitante_id):
+    # 1) Recuperamos la aplicación actual
+    actual = Solicitante.query.get_or_404(solicitante_id)
+
+    # 2) Buscamos todas las aplicaciones de esta persona (mismo email O mismo documento)
+    todas = Solicitante.query.filter(
+        (Solicitante.emails == actual.emails) |
+        (Solicitante.documento == actual.documento)
+    ).order_by(Solicitante.fecha_registro.asc()).all()
+
+    # 3) Inicializamos las dos a comparar
+    app1 = actual
+    app2 = None
+
+    # 4) Si es POST, tomamos los IDs elegidos en el formulario
+    if request.method == 'POST':
+        id1 = int(request.form.get('app1'))
+        id2 = int(request.form.get('app2'))
+        app1 = next((s for s in todas if s.id == id1), actual)
+        app2 = next((s for s in todas if s.id == id2), None)
+
+    return render_template(
+        'solicitantes/compare.html',
+        aplicaciones=todas,
+        app1=app1,
+        app2=app2
+    )

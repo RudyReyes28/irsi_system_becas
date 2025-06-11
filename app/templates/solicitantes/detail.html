@@ -21,10 +21,10 @@
   <h2>Detalle de Solicitante: {{ solicitante.nombre }}</h2>
   <!-- Datos básicos -->
   <table class="table table-striped">
-    <tr><th>Email:</th><td>{{ solicitante.email }}</td></tr>
-    <tr><th>Documento:</th><td>{{ solicitante.documento }}</td></tr>
-    <tr><th>Programa:</th><td>{{ solicitante.programa_solicitado }}</td></tr>
-    <tr><th>Estado:</th><td>{{ solicitante.estado }}</td></tr>
+    <tr><th>Email:</th><td>{{ solicitante.emails }}</td></tr>
+    <tr><th>Documento de Identificacion:</th><td>{{ solicitante.documento }}</td></tr>
+    <tr><th>Programa:</th><td>{{ solicitante.programa_legible }}</td></tr>
+    <tr><th>Estado:</th><td>{{ solicitante.estado_legible }}</td></tr>
     <!-- Agrega más campos según necesidad -->
   </table>
 
@@ -34,13 +34,61 @@
     {% for h in historial %}
     <li class="list-group-item d-flex justify-content-between">
       <div>
-        <strong>{{ h.estado }}</strong> por {{ h.usuario.nombre }}<br>
+        <strong>{{ h.estado.name.replace("_", " ").title() }}</strong> por {{ h.usuario.nombre }}<br>
         <small>{{ h.fecha.strftime('%Y-%m-%d %H:%M') }}</small>
         {% if h.comentario %}<br><small>Comentario: {{ h.comentario }}</small>{% endif %}
       </div>
     </li>
     {% endfor %}
   </ul>
+
+  {% if mostrar_compare %}
+  <a href="{{ url_for('solicitantes.compare_solicitante', solicitante_id=solicitante.id) }}"
+     class="btn btn-outline-info mb-3">
+    Ver comparaciones
+  </a>
+<!-- Botón para abrir el modal -->
+<button class="btn btn-warning mb-3" data-bs-toggle="modal" data-bs-target="#changeStateModal">
+  Cambiar Estado
+</button>
+
+<!-- Modal de cambio de estado -->
+<div class="modal fade" id="changeStateModal" tabindex="-1" aria-labelledby="changeStateLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{{ url_for('solicitantes.change_state', solicitante_id=solicitante.id) }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="changeStateLabel">Cambiar Estado de Solicitud</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="estadoSelect" class="form-label">Nuevo Estado</label>
+            <select id="estadoSelect" name="estado" class="form-select" required>
+              {% for st in EstadoSolicitud %}
+                <option value="{{ st.name }}"
+                  {% if st == solicitante.estado %}selected{% endif %}>
+                  {{ st.value }}  <!-- mostramos el label legible -->
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="comentarioInput" class="form-label">Comentario (opcional)</label>
+            <textarea id="comentarioInput" name="comentario" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Cambio</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+{% endif %}
 
   <!-- Carga de Documentos Drag & Drop -->
   <h5>Documentos</h5>
@@ -51,9 +99,20 @@
     <input type="file" name="documento" id="fileInput" class="d-none">
   </form>
   <ul class="list-group">
-    {% for doc in documentos %}
-      <li class="list-group-item">{{ doc }}</li>
-    {% endfor %}
+    {% if documentos %}
+      {% for doc in documentos %}
+        <li class="list-group-item">
+          <a href="{{ url_for('uploaded_file',
+                              solicitante_id=solicitante.id,
+                              filename=doc) }}"
+             target="_blank">
+            {{ doc }}
+          </a>
+        </li>
+      {% endfor %}
+    {% else %}
+      <li class="list-group-item text-muted">No hay documentos cargados.</li>
+    {% endif %}
   </ul>
 </div>
 {% endblock %}

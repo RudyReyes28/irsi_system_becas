@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Detalle Becado{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Becado: {{ becado.solicitante.nombre }}</h2>
+  <p><strong>Cohorte:</strong> {{ becado.cohorte }}</p>
+  <p><strong>Estado:</strong> {{ becado.estado.name.title() }}</p>
+  <p><strong>Inicio:</strong> {{ becado.fecha_inicio.strftime('%Y-%m-%d') }}</p>
+  <h5>Timeline</h5>
+  <ul class="list-group mb-3">
+    {% for ev in timeline %}
+      <li class="list-group-item">
+        {{ ev.fecha.strftime('%Y-%m-%d %H:%M') }} — {{ ev.estado.name.title() }}{% if ev.comentario %}: {{ ev.comentario }}{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  
+  <a href="#" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changeStateModal">Cambiar Estado</a>
+</div>
+{% endblock %}

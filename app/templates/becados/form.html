@@ -1,0 +1,15 @@
+<form method="post" action="{{ url_for('becados.change_state', becado_id=becado.id) }}">
+  <div class="mb-3">
+    <label for="estado">Nuevo Estado</label>
+    <select name="estado" class="form-select">
+      {% for st in EstadoBeca %}
+        <option value="{{ st.name }}">{{ st.name.title() }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="comentario">Comentario</label>
+    <textarea name="comentario" class="form-control" rows="2"></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Guardar</button>
+</form>

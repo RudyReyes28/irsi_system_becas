@@ -9,7 +9,7 @@
     <p class="lead">Panel de administrador. Puedes gestionar usuarios, roles y revisar auditorías.</p>
     <a href="{{ url_for('users.list_users') }}" class="btn btn-primary">Gestión de Usuarios</a>
     <a href="{{url_for('solicitantes.list_solicitantes') }}" class="btn btn-primary">Gestión de Solicitantes</a>
-    
+    <a href="{{ url_for('becados.list_becados') }}" class="btn btn-primary">Gestión de Becados</a>
   
   {% elif rol == 'Director' %}
     <p class="lead">Panel de director. Revisa estadísticas y aprueba solicitudes.</p>

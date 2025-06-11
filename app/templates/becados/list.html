@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Becados Activos{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Becados Activos</h1>
+  <table class="table">
+    <thead><tr><th>ID</th><th>Solicitante</th><th>Cohorte</th><th>Estado</th><th>Inicio</th><th>Acciones</th></tr></thead>
+    <tbody>
+      {% for b in becados %}
+      <tr>
+        <td>{{ b.id }}</td>
+        <td>{{ b.solicitante.nombre }}</td>
+        <td>{{ b.cohorte }}</td>
+        <td>{{ b.estado.name.title() }}</td>
+        <td>{{ b.fecha_inicio.strftime('%Y-%m-%d') }}</td>
+        <td><a href="{{ url_for('becados.detail_becado', becado_id=b.id) }}" class="btn btn-sm btn-primary">Ver</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <a href="{{ url_for('becados.list_aprobados') }}" class="btn btn-outline-primary">
+      Ver Solicitantes Aprobados
+    </a>
+  </div>
+</div>
+
+</div>
+{% endblock %}

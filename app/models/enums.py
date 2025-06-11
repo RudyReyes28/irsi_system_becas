@@ -8,6 +8,7 @@ class EstadoSolicitud(enum.Enum):
     RECHAZADO = 'Rechazado'
     INCOMPLETO = 'Incompleto'
     CANCELADO = 'Cancelado'
+    CONVERTIDO = 'Convertido'  # Nuevo estado para solicitantes convertidos a becados
 
 class Genero(enum.Enum):
     MASCULINO = 'Masculino'

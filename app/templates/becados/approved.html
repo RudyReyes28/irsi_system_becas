@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Solicitantes Aprobados{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>Solicitantes Aprobados</h1>
+  {% if aprobados %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Programa</th>
+          <th>Fecha de Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in aprobados %}
+        <tr>
+          <td>{{ s.id }}</td>
+          <td>{{ s.nombre }}</td>
+          <td>{{ s.emails }}</td>
+          <td>{{ s.programa_solicitado.name.replace('_',' ').title() }}</td>
+          <td>{{ s.fecha_registro.strftime('%Y-%m-%d') }}</td>
+          <td>
+            <form method="post"
+                  action="{{ url_for('becados.convert_solicitante', solicitante_id=s.id) }}"
+                  style="display:inline">
+              <button type="submit" class="btn btn-success btn-sm">
+                Convertir a Becado
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-muted">No hay solicitantes con estado «Aprobado».</p>
+  {% endif %}
+</div>
+{% endblock %}

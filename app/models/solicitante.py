@@ -4,6 +4,7 @@ from sqlalchemy.orm import validates
 from app import db
 from .enums import EstadoSolicitud, Genero, Pais, Programa, Modalidad
 import os
+from flask import current_app
 
 class Solicitante(db.Model):
     __tablename__ = 'solicitantes'
@@ -12,13 +13,13 @@ class Solicitante(db.Model):
 
     # Datos personales
     nombre = db.Column(db.String(100), nullable=False)
-    documento = db.Column(db.String(20), unique=True, nullable=False)
+    documento = db.Column(db.String(20), nullable=False)
     fecha_nacimiento = db.Column(db.Date, nullable=False)
     genero = db.Column(db.Enum(Genero), nullable=False)
     pais = db.Column(db.Enum(Pais), nullable=False)
     ciudad = db.Column(db.String(100), nullable=False)
-    telefonos = db.Column(db.String(100))  # Puede contener varios separados por coma
-    emails = db.Column(db.String(150))     # Igual, separados por coma si hay más de uno
+    telefonos = db.Column(db.String(100))  
+    emails = db.Column(db.String(150))     
 
     # Info académica
     nivel_educativo = db.Column(db.String(100), nullable=False)
@@ -88,16 +89,26 @@ class Solicitante(db.Model):
             query = query.filter(Solicitante.pais == filtros['pais'])
         return query.order_by(Solicitante.fecha_registro.desc()).paginate(page=page, per_page=per_page)
 
-    @staticmethod
+    
     def listar_documentos(self):
-        # Implementar según lógica: devuelve lista de nombres de archivo
-        # Por ejemplo, listar todos los archivos en carpeta uploads/solicitantes/<id>/
-        upload_folder = db.session.bind.engine.url.database + '/uploads/solicitantes/' + str(self.id)
-        try:
-            return os.listdir(upload_folder)
-        except Exception:
+        """
+        Lista los nombres de archivos subidos para este solicitante.
+        Busca en la carpeta definida por UPLOAD_FOLDER_SOLICITANTES/<id>.
+        """
+        upload_folder = current_app.config.get('UPLOAD_FOLDER_SOLICITANTES')
+        if not upload_folder:
             return []
-        
+
+        carpeta = os.path.join(upload_folder, str(self.id))
+        try:
+            return os.listdir(carpeta)
+        except FileNotFoundError:
+            # Aún no hay carpeta para este solicitante
+            return []
+        except Exception as e:
+            # Algo inesperado
+            current_app.logger.error(f"Error al listar documentos en {carpeta}: {e}")
+            return []
     @property
     def programa_legible(self):
         return self.programa_solicitado.name.replace("_", " ").title()

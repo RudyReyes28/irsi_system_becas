@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 from flask import Flask, session, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_login import LoginManager, current_user, logout_user
+from flask_login import LoginManager, current_user, logout_user, login_required
+from flask import send_from_directory, current_app
 from dotenv import load_dotenv
 from app.utils.email import init_mail
-from app.utils.authorization import has_permission
+from app.utils.authorization import has_permission, require_role
 # Cargar variables de entorno
 load_dotenv()
 
@@ -105,8 +106,25 @@ def create_app(config_class):
     setup_logging(app)
     # Registrar manejadores de errores
     register_errorhandlers(app)
+    @app.route('/uploads/solicitantes/<int:solicitante_id>/<path:filename>')
+    @login_required
+    @require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+    def uploaded_file(solicitante_id, filename):
+        """
+        Servir un documento específico para un solicitante dado.
+        """
+        # Construimos la ruta absoluta de la carpeta de ese solicitante
+        upload_folder = current_app.config['UPLOAD_FOLDER_SOLICITANTES']
+        carpeta = os.path.join(upload_folder, str(solicitante_id))
+        # send_from_directory toma (directorio, nombre de archivo)
+        return send_from_directory(carpeta, filename)
 
     return app
+
+
+
+
+
 
 def register_errorhandlers(app):
     @app.errorhandler(403)
@@ -129,13 +147,13 @@ def register_routes(app):
     """Registra todas las rutas de la aplicación"""
     from app.routes.auth_routes import auth_bp
     #from app.routes.solicitantes_routes import solicitantes_bp
-    from app.routes.becados_routes import becados_bp
+    from app.routes.becados import becados_bp
     from app.routes.users import users_bp
     from app.routes.main import main_bp
     from app.routes.solicitantes import solicitantes_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(solicitantes_bp, url_prefix='/solicitantes')
-    app.register_blueprint(becados_bp)
+    app.register_blueprint(becados_bp, url_prefix='/becados')
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(main_bp)
 
