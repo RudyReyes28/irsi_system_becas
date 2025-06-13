@@ -86,7 +86,7 @@ def cambiar_estado_becado(becado_id: int, nuevo_estado: EstadoBeca, usuario_id: 
         usuario_id=usuario_id,
         estado=nuevo_estado,
         fecha=datetime.utcnow(),
-        comentario=comentario
+        observacion=comentario
     )
     db.session.add(entry)
 

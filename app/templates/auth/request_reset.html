@@ -1,16 +1,391 @@
-<!-- app/templates/auth/request_reset.html -->
-{% extends 'base.html' %}
-{% block content %}
-<h2>Solicitar Restablecimiento de Contraseña</h2>
-<form method="POST">
-  {{ form.hidden_tag() }}
-  <div class="mb-3">
-    {{ form.email.label(class="form-label") }}
-    {{ form.email(class="form-control") }}
-    {% for error in form.email.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-  </div>
-  <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
-</form>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRSI - Restablecer Contraseña</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --irsi-primary: #1e3a8a;
+            --irsi-secondary: #3b82f6;
+            --irsi-accent: #06b6d4;
+            --irsi-dark: #0f172a;
+            --irsi-light: #f8fafc;
+            --irsi-gray: #64748b;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--irsi-primary) 0%, var(--irsi-secondary) 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .reset-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .reset-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+
+        .reset-header {
+            background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+            color: white;
+            padding: 40px 30px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .reset-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .reset-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .reset-header p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 0;
+            position: relative;
+            z-index: 1;
+            line-height: 1.5;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .company-logo i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .reset-body {
+            padding: 40px 30px;
+        }
+
+        .info-alert {
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            border: 1px solid #4fc3f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .info-alert i {
+            color: var(--irsi-secondary);
+            font-size: 20px;
+            margin-right: 15px;
+            margin-top: 2px;
+        }
+
+        .info-alert-content {
+            flex: 1;
+        }
+
+        .info-alert h6 {
+            color: var(--irsi-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-alert p {
+            color: var(--irsi-gray);
+            margin-bottom: 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .form-floating {
+            margin-bottom: 20px;
+        }
+
+        .form-floating .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            height: 60px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-floating .form-control:focus {
+            border-color: var(--irsi-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+        }
+
+        .form-floating label {
+            color: var(--irsi-gray);
+            font-weight: 500;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn-reset:hover {
+            background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-back {
+            color: var(--irsi-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+
+        .btn-back:hover {
+            color: var(--irsi-primary);
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-back i {
+            margin-right: 8px;
+        }
+
+        .error-message {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .error-message i {
+            margin-right: 8px;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--irsi-gray);
+            font-size: 12px;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .security-badge i {
+            margin-right: 5px;
+            color: var(--irsi-secondary);
+        }
+
+        @media (max-width: 576px) {
+            .reset-card {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .reset-header {
+                padding: 30px 20px 20px;
+            }
+            
+            .reset-body {
+                padding: 30px 20px;
+            }
+            
+            .reset-header h2 {
+                font-size: 1.5rem;
+            }
+            
+            .info-alert {
+                padding: 15px;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reset-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="reset-container">
+        <div class="card reset-card">
+            <div class="reset-header">
+                <div class="company-logo">
+                    <i class="bi bi-key"></i>
+                </div>
+                <h2>Restablecer Contraseña</h2>
+                <p>Ingresa tu email para recibir instrucciones de restablecimiento</p>
+            </div>
+            
+            <div class="reset-body">
+                <div class="info-alert">
+                    <i class="bi bi-info-circle"></i>
+                    <div class="info-alert-content">
+                        <h6>¿Cómo funciona?</h6>
+                        <p>Te enviaremos un enlace seguro a tu correo electrónico para que puedas crear una nueva contraseña.</p>
+                    </div>
+                </div>
+                
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="form-floating">
+                        {{ form.email(class="form-control", placeholder="ejemplo@correo.com", required=true) }}
+                        {{ form.email.label() }}
+                        {% for error in form.email.errors %}
+                            <div class="error-message">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-reset">
+                        <i class="bi bi-envelope me-2"></i>{{ form.submit.label.text }}
+                    </button>
+                    
+                    <a href="{{ url_for('auth.login') }}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                        Volver al inicio de sesión
+                    </a>
+                    
+                    <div class="security-badge">
+                        <i class="bi bi-shield-check"></i>
+                        Proceso seguro y confidencial
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const emailInput = document.querySelector('input[type="email"]');
+            
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+            
+            function showFieldError(field, message) {
+                // Remover errores existentes
+                const existingError = field.parentNode.querySelector('.error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                // Crear nuevo mensaje de error
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle"></i>${message}`;
+                field.parentNode.appendChild(errorDiv);
+                field.classList.add('is-invalid');
+            }
+            
+            function clearFieldError(field) {
+                const existingError = field.parentNode.querySelector('.error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+                field.classList.remove('is-invalid');
+                field.classList.add('is-valid');
+            }
+            
+            // Validación del email
+            emailInput.addEventListener('blur', function() {
+                const email = this.value.trim();
+                if (email === '') {
+                    showFieldError(this, 'El email es requerido');
+                } else if (!validateEmail(email)) {
+                    showFieldError(this, 'Por favor ingresa un email válido');
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            
+            // Validación antes del envío
+            form.addEventListener('submit', function(e) {
+                const email = emailInput.value.trim();
+                if (email === '' || !validateEmail(email)) {
+                    showFieldError(emailInput, email === '' ? 'El email es requerido' : 'Por favor ingresa un email válido');
+                    e.preventDefault();
+                }
+            });
+            
+            // Limpiar errores al escribir
+            emailInput.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    clearFieldError(this);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

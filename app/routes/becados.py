@@ -9,6 +9,7 @@ from app.services.becados_service import (
     obtener_timeline_becado,
     obtener_becado_por_id
 )
+from app.models.enums import EstadoBeca
 
 becados_bp = Blueprint('becados', __name__, template_folder='../templates/becados')
 
@@ -36,15 +37,20 @@ def detail_becado(becado_id):
     timeline = obtener_timeline_becado(becado_id)
     return render_template('becados/detail.html', becado=becado, timeline=timeline)
 
-@becados_bp.route('/<int:becado_id>/change_state', methods=['POST'])
+@becados_bp.route('/<int:becado_id>/change_state', methods=['GET','POST'])
 @login_required
 @require_role('Administrador', 'Director')
 def change_state(becado_id):
-    nuevo_estado = request.form.get('estado')
-    comentario = request.form.get('comentario', '')
-    cambiar_estado_becado(becado_id, nuevo_estado, current_user.id, comentario)
-    flash(f'Estado cambiado a {nuevo_estado}.', 'success')
-    return redirect(url_for('becados.detail_becado', becado_id=becado_id))
+    if request.method == 'POST':
+        nuevo_estado = request.form.get('estado')
+        comentario = request.form.get('comentario', '')
+        cambiar_estado_becado(becado_id, nuevo_estado, current_user.id, comentario)
+        flash(f'Estado cambiado a {nuevo_estado}.', 'success')
+        return redirect(url_for('becados.detail_becado', becado_id=becado_id))
+    else:
+        becado = obtener_becado_por_id(becado_id)
+        return render_template('becados/form.html', becado=becado, EstadoBeca=EstadoBeca)
+    
 
 @becados_bp.route('/communications/<int:becado_id>', methods=['GET', 'POST'])
 def communications(becado_id):

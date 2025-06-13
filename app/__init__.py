@@ -29,6 +29,7 @@ def create_app(config_class):
     login_manager.init_app(app)
 
     login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Debes iniciar sesión para acceder al sistema.'
     login_manager.login_message_category = 'warning'
 
     # Importar todos los modelos DESPUÉS de inicializar db
@@ -155,7 +156,7 @@ def register_routes(app):
     app.register_blueprint(solicitantes_bp, url_prefix='/solicitantes')
     app.register_blueprint(becados_bp, url_prefix='/becados')
     app.register_blueprint(users_bp, url_prefix='/users')
-    app.register_blueprint(main_bp)
+    app.register_blueprint(main_bp, url_prefix='/main')
 
 
 def setup_logging(app):
