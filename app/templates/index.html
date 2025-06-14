@@ -1,30 +1,626 @@
 {% extends 'base.html' %}
-{% block title %}Inicio{% endblock %}
+{% block title %}Dashboard - IRSI Becas{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h1 class="mb-4">Bienvenido, {{ current_user.nombre }} 👋</h1>
-  
-  {% if rol == 'Administrador' %}
-    <p class="lead">Panel de administrador. Puedes gestionar usuarios, roles y revisar auditorías.</p>
-    <a href="{{ url_for('users.list_users') }}" class="btn btn-primary">Gestión de Usuarios</a>
-    <a href="{{url_for('solicitantes.list_solicitantes') }}" class="btn btn-primary">Gestión de Solicitantes</a>
-    <a href="{{ url_for('becados.list_becados') }}" class="btn btn-primary">Gestión de Becados</a>
-  
-  {% elif rol == 'Director' %}
-    <p class="lead">Panel de director. Revisa estadísticas y aprueba solicitudes.</p>
-    <a href="#" class="btn btn-info">Ver Reportes</a>
-  
-  {% elif rol == 'Asistente' %}
-    <p class="lead">Panel de asistente. Ingresa y edita solicitudes de beca.</p>
-    <a href="#" class="btn btn-secondary">Gestionar Solicitudes</a>
+<div class="container-fluid py-4">
+  <!-- Hero Section -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="hero-card">
+        <div class="row align-items-center">
+          <div class="col-lg-8">
+            <div class="hero-content">
+              <h1 class="hero-title">
+                <i class="bi bi-person-circle me-3"></i>
+                Bienvenido, {{ current_user.nombre }}
+              </h1>
+              <p class="hero-subtitle">
+                {% if rol == 'Administrador' %}
+                  Panel de Administrador - Control total del sistema
+                {% elif rol == 'Director' %}
+                  Panel de Director - Supervisión y reportes ejecutivos
+                {% elif rol == 'Asistente' %}
+                  Panel de Asistente - Gestión de solicitudes
+                {% elif rol == 'Consulta' %}
+                  Panel de Consulta - Acceso de solo lectura
+                {% endif %}
+              </p>
+              <div class="hero-badge">
+                <span class="badge-role">{{ rol }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 text-center">
+            <div class="hero-icon">
+              <i class="bi bi-graduation-cap"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  {% elif rol == 'Consulta' %}
-    <p class="lead">Panel de solo lectura. Puedes consultar información del sistema.</p>
-    <a href="#" class="btn btn-outline-secondary">Ver Información</a>
+  <!-- Quick Stats -->
+  <div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="stat-card stat-primary">
+        <div class="stat-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">1,247</h3>
+          <p class="stat-label">Total Solicitantes</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="stat-card stat-success">
+        <div class="stat-icon">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">342</h3>
+          <p class="stat-label">Becas Aprobadas</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="stat-card stat-warning">
+        <div class="stat-icon">
+          <i class="bi bi-clock-fill"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">89</h3>
+          <p class="stat-label">En Revisión</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="stat-card stat-info">
+        <div class="stat-icon">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-number">156</h3>
+          <p class="stat-label">Becados Activos</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  {% else %}
-    <p class="text-warning">Tu rol no tiene acceso definido.</p>
-  {% endif %}
+  <!-- Main Actions by Role -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="actions-section">
+        <h2 class="section-title">
+          <i class="bi bi-lightning-charge me-2"></i>
+          Acciones Principales
+        </h2>
+        
+        <div class="row">
+          {% if rol == 'Administrador' %}
+            <div class="col-lg-4 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-primary">
+                  <i class="bi bi-people"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Gestión de Usuarios</h4>
+                  <p>Administrar usuarios del sistema, roles y permisos</p>
+                  <a href="{{ url_for('users.list_users') }}" class="btn btn-irsi-primary">
+                    <i class="bi bi-gear me-2"></i>Gestionar
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-info">
+                  <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Solicitantes</h4>
+                  <p>Revisar y gestionar todas las solicitudes de beca</p>
+                  <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-irsi-primary">
+                    <i class="bi bi-list-check me-2"></i>Ver Solicitudes
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-success">
+                  <i class="bi bi-mortarboard"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Becados</h4>
+                  <p>Supervisar el progreso de estudiantes becados</p>
+                  <a href="{{ url_for('becados.list_becados') }}" class="btn btn-irsi-primary">
+                    <i class="bi bi-graph-up me-2"></i>Ver Becados
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          {% elif rol == 'Director' %}
+            <div class="col-lg-4 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-info">
+                  <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Reportes Ejecutivos</h4>
+                  <p>Estadísticas y métricas del programa de becas</p>
+                  <a href="#" class="btn btn-irsi-primary">
+                    <i class="bi bi-bar-chart me-2"></i>Ver Reportes
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-primary">
+                  <i class="bi bi-person-check"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Solicitudes</h4>
+                  <p>Revisar y aprobar solicitudes de beca</p>
+                  <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-irsi-primary">
+                    <i class="bi bi-check-square me-2"></i>Revisar
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-success">
+                  <i class="bi bi-award"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Becados</h4>
+                  <p>Seguimiento del rendimiento académico</p>
+                  <a href="{{ url_for('becados.list_becados') }}" class="btn btn-irsi-primary">
+                    <i class="bi bi-trophy me-2"></i>Seguimiento
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          {% elif rol == 'Asistente' %}
+            <div class="col-lg-6 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-primary">
+                  <i class="bi bi-person-plus"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Nueva Solicitud</h4>
+                  <p>Registrar un nuevo solicitante de beca</p>
+                  <a href="{{ url_for('solicitantes.create_solicitante') }}" class="btn btn-irsi-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Crear Solicitud
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-6 col-md-6 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-info">
+                  <i class="bi bi-pencil-square"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Gestionar Solicitudes</h4>
+                  <p>Editar y actualizar información de solicitantes</p>
+                  <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-irsi-primary">
+                    <i class="bi bi-list-ul me-2"></i>Ver Todas
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          {% elif rol == 'Consulta' %}
+            <div class="col-lg-12 mb-3">
+              <div class="action-card">
+                <div class="action-icon bg-secondary">
+                  <i class="bi bi-search"></i>
+                </div>
+                <div class="action-content">
+                  <h4>Consultar Información</h4>
+                  <p>Acceso de solo lectura a la información del sistema</p>
+                  <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-eye me-2"></i>Consultar
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="row">
+    <div class="col-lg-8 mb-4">
+      <div class="activity-section">
+        <h3 class="section-title">
+          <i class="bi bi-clock-history me-2"></i>
+          Actividad Reciente
+        </h3>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-icon bg-success">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="activity-content">
+              <h5>Solicitud Aprobada</h5>
+              <p>María González - Desarrollo Web Full Stack</p>
+              <small class="text-muted">Hace 2 horas</small>
+            </div>
+          </div>
+          
+          <div class="activity-item">
+            <div class="activity-icon bg-primary">
+              <i class="bi bi-person-plus"></i>
+            </div>
+            <div class="activity-content">
+              <h5>Nueva Solicitud</h5>
+              <p>Carlos Mendez - Ciencia de Datos</p>
+              <small class="text-muted">Hace 4 horas</small>
+            </div>
+          </div>
+          
+          <div class="activity-item">
+            <div class="activity-icon bg-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="activity-content">
+              <h5>Documentación Pendiente</h5>
+              <p>Ana Rodríguez - Requiere certificado académico</p>
+              <small class="text-muted">Hace 6 horas</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+      <div class="quick-info-section">
+        <h3 class="section-title">
+          <i class="bi bi-info-circle me-2"></i>
+          Información Rápida
+        </h3>
+        
+        <div class="info-card">
+          <div class="info-header">
+            <i class="bi bi-calendar-event"></i>
+            <h4>Próximas Fechas</h4>
+          </div>
+          <div class="info-content">
+            <div class="info-item">
+              <strong>Cierre Convocatoria:</strong>
+              <span>15 de Julio, 2025</span>
+            </div>
+            <div class="info-item">
+              <strong>Resultados:</strong>
+              <span>30 de Julio, 2025</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="info-card mt-3">
+          <div class="info-header">
+            <i class="bi bi-pie-chart"></i>
+            <h4>Estado General</h4>
+          </div>
+          <div class="info-content">
+            <div class="progress-item">
+              <span>Solicitudes Procesadas</span>
+              <div class="progress">
+                <div class="progress-bar bg-success" style="width: 75%"></div>
+              </div>
+              <small>75% completado</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<style>
+/* Hero Section */
+.hero-card {
+  background: linear-gradient(135deg, var(--irsi-primary) 0%, var(--irsi-secondary) 100%);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  color: white;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 40px rgba(30, 58, 138, 0.3);
+  overflow: hidden;
+  position: relative;
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.hero-badge {
+  display: inline-block;
+}
+
+.badge-role {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.hero-icon {
+  font-size: 8rem;
+  opacity: 0.3;
+  color: white;
+}
+
+/* Stats Cards */
+.stat-card {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.stat-primary { border-left-color: var(--irsi-primary); }
+.stat-success { border-left-color: #28a745; }
+.stat-warning { border-left-color: #ffc107; }
+.stat-info { border-left-color: var(--irsi-accent); }
+
+.stat-icon {
+  font-size: 2.5rem;
+  margin-right: 1rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--irsi-light), #e2e8f0);
+}
+
+.stat-primary .stat-icon { color: var(--irsi-primary); }
+.stat-success .stat-icon { color: #28a745; }
+.stat-warning .stat-icon { color: #ffc107; }
+.stat-info .stat-icon { color: var(--irsi-accent); }
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--irsi-dark);
+}
+
+.stat-label {
+  margin: 0;
+  color: var(--irsi-gray);
+  font-weight: 500;
+}
+
+/* Sections */
+.section-title {
+  color: var(--irsi-dark);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+}
+
+.actions-section, .activity-section, .quick-info-section {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Action Cards */
+.action-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.action-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.action-content h4 {
+  color: var(--irsi-dark);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.action-content p {
+  color: var(--irsi-gray);
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+/* Activity List */
+.activity-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-size: 1rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.activity-content h5 {
+  margin: 0 0 0.25rem 0;
+  font-weight: 600;
+  color: var(--irsi-dark);
+}
+
+.activity-content p {
+  margin: 0 0 0.25rem 0;
+  color: var(--irsi-gray);
+}
+
+/* Info Cards */
+.info-card {
+  background: var(--irsi-light);
+  border-radius: 10px;
+  padding: 1.5rem;
+  border-left: 3px solid var(--irsi-primary);
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.info-header i {
+  font-size: 1.5rem;
+  color: var(--irsi-primary);
+  margin-right: 0.75rem;
+}
+
+.info-header h4 {
+  margin: 0;
+  color: var(--irsi-dark);
+  font-weight: 600;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.progress-item span {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--irsi-dark);
+}
+
+.progress {
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-icon {
+    font-size: 4rem;
+    margin-top: 2rem;
+  }
+  
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .stat-icon {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+}
+</style>
 {% endblock %}

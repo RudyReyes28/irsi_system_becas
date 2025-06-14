@@ -1,150 +1,1064 @@
 {% extends 'base.html' %}
-{% block title %}Formulario Solicitante{% endblock %}
+{% block title %}{{ solicitante and 'Editar Solicitante' or 'Nuevo Solicitante' }} - IRSI Becas{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-  <h2>{{ solicitante and 'Editar Solicitante' or 'Nuevo Solicitante' }}</h2>
-  <form id="multiStepForm"
-        method="post"
-        enctype="multipart/form-data"
-        action="{% if solicitante %}{{ url_for('solicitantes.edit_solicitante', solicitante_id=solicitante.id) }}{% else %}{{ url_for('solicitantes.create_solicitante') }}{% endif %}">
-    {{ form.hidden_tag() }}
+{% block head %}
+<style>
+  /* Estilos específicos para el formulario de solicitantes */
+  .form-wizard {
+    background: var(--irsi-white);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(30, 58, 138, 0.15);
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
 
-    <!-- Paso 1: Datos Personales -->
-    <div class="step" id="step-1">
-      <h4>Datos Personales</h4>
-      <div class="mb-3">
-        {{ form.nombre.label(class="form-label") }}
-        {{ form.nombre(class="form-control") }}
-        {% for error in form.nombre.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.emails.label(class="form-label") }}
-        {{ form.emails(class="form-control") }}
-        {% for error in form.emails.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.documento.label(class="form-label") }}
-        {{ form.documento(class="form-control") }}
-        {% for error in form.documento.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.fecha_nacimiento.label(class="form-label") }}
-        {{ form.fecha_nacimiento(class="form-control", type="date") }}
-        {% for error in form.fecha_nacimiento.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.genero.label(class="form-label") }}
-        {{ form.genero(class="form-select") }}
-        {% for error in form.genero.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.pais.label(class="form-label") }}
-        {{ form.pais(class="form-select") }}
-        {% for error in form.pais.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.ciudad.label(class="form-label") }}
-        {{ form.ciudad(class="form-control") }}
-        {% for error in form.ciudad.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.telefonos.label(class="form-label") }}
-        {{ form.telefonos(class="form-control") }}
-        {% for error in form.telefonos.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <button type="button" class="btn btn-primary next-step">Siguiente</button>
-    </div>
+  .wizard-header {
+    background: linear-gradient(135deg, var(--irsi-primary) 0%, var(--irsi-secondary) 100%);
+    color: var(--irsi-white);
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+  }
 
-    <!-- Paso 2: Datos Académicos -->
-    <div class="step d-none" id="step-2">
-      <h4>Datos Académicos</h4>
-      <div class="mb-3">
-        {{ form.nivel_educativo.label(class="form-label") }}
-        {{ form.nivel_educativo(class="form-select") }}
-        {% for error in form.nivel_educativo.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.institucion.label(class="form-label") }}
-        {{ form.institucion(class="form-control") }}
-        {% for error in form.institucion.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.promedio.label(class="form-label") }}
-        {{ form.promedio(class="form-control") }}
-        {% for error in form.promedio.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.experiencia_tech.label(class="form-label") }}
-        {{ form.experiencia_tech(class="form-control", rows=3) }}
-        {% for error in form.experiencia_tech.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <button type="button" class="btn btn-secondary prev-step">Anterior</button>
-      <button type="button" class="btn btn-primary next-step">Siguiente</button>
-    </div>
+  .wizard-header::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: var(--irsi-white);
+    border-radius: 20px 20px 0 0;
+  }
 
-    <!-- Paso 3: Información Socioeconómica -->
-    <div class="step d-none" id="step-3">
-      <h4>Información Socioeconómica</h4>
-      <div class="mb-3">
-        {{ form.situacion_laboral.label(class="form-label") }}
-        {{ form.situacion_laboral(class="form-control") }}
-        {% for error in form.situacion_laboral.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.ingresos.label(class="form-label") }}
-        {{ form.ingresos(class="form-control") }}
-        {% for error in form.ingresos.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.acceso_tecnologia.label(class="form-label") }}
-        {{ form.acceso_tecnologia(class="form-select") }}
-        {% for error in form.acceso_tecnologia.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.dependientes.label(class="form-label") }}
-        {{ form.dependientes(class="form-control") }}
-        {% for error in form.dependientes.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <button type="button" class="btn btn-secondary prev-step">Anterior</button>
-      <button type="button" class="btn btn-primary next-step">Siguiente</button>
-    </div>
+  .wizard-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
 
-    <!-- Paso 4: Información del Programa -->
-    <div class="step d-none" id="step-4">
-      <h4>Información del Programa</h4>
-      <div class="mb-3">
-        {{ form.programa_solicitado.label(class="form-label") }}
-        {{ form.programa_solicitado(class="form-select") }}
-        {% for error in form.programa_solicitado.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.modalidad.label(class="form-label") }}
-        {{ form.modalidad(class="form-select") }}
-        {% for error in form.modalidad.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.disponibilidad.label(class="form-label") }}
-        {{ form.disponibilidad(class="form-control") }}
-        {% for error in form.disponibilidad.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.motivacion.label(class="form-label") }}
-        {{ form.motivacion(class="form-control", rows=3) }}
-        {% for error in form.motivacion.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.objetivos.label(class="form-label") }}
-        {{ form.objetivos(class="form-control", rows=3) }}
-        {% for error in form.objetivos.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-      </div>
-      <button type="button" class="btn btn-secondary prev-step">Anterior</button>
-      <button type="submit" class="btn btn-success">Guardar</button>
-    </div>
-  </form>
-</div>
+  .wizard-subtitle {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+  }
+
+  /* Progress Bar */
+  .progress-container {
+    padding: 2rem 2rem 1rem 2rem;
+    background: var(--irsi-white);
+  }
+
+  .step-indicator {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 2rem;
+  }
+
+  .step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #e2e8f0;
+    z-index: 1;
+    transform: translateY(-50%);
+  }
+
+  .progress-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--irsi-secondary), var(--irsi-accent));
+    z-index: 2;
+    transform: translateY(-50%);
+    transition: width 0.5s ease;
+    border-radius: 2px;
+  }
+
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 3;
+    flex: 1;
+  }
+
+  .step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: var(--irsi-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
+    border: 4px solid var(--irsi-white);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .step-circle.active {
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+    color: var(--irsi-white);
+    transform: scale(1.1);
+  }
+
+  .step-circle.completed {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: var(--irsi-white);
+  }
+
+  .step-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--irsi-gray);
+    text-align: center;
+    transition: color 0.3s ease;
+  }
+
+  .step-item.active .step-label {
+    color: var(--irsi-primary);
+  }
+
+  .step-item.completed .step-label {
+    color: #059669;
+  }
+
+  /* Form Steps */
+  .form-content {
+    padding: 2rem;
+  }
+
+  .step {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .step-title {
+    color: var(--irsi-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .step-subtitle {
+    color: var(--irsi-gray);
+    margin-bottom: 2rem;
+    font-size: 1rem;
+  }
+
+  /* Form Controls */
+  .form-label {
+    font-weight: 600;
+    color: var(--irsi-dark);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-control, .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--irsi-white);
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: var(--irsi-secondary);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    background: var(--irsi-white);
+  }
+
+  .form-control.is-valid, .form-select.is-valid {
+    border-color: #10b981;
+  }
+
+  .form-control.is-invalid, .form-select.is-invalid {
+    border-color: #ef4444;
+  }
+
+  .invalid-feedback {
+    display: block;
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+
+  .valid-feedback {
+    display: block;
+    color: #10b981;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+
+  /* Form Grid */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-row.two-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-row.three-cols {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  @media (max-width: 768px) {
+    .form-row.two-cols,
+    .form-row.three-cols {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Navigation Buttons */
+  .form-navigation {
+    padding: 2rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn-wizard {
+    padding: 0.75rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-wizard-primary {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    color: var(--irsi-white);
+  }
+
+  .btn-wizard-primary:hover {
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn-wizard-secondary {
+    background: #e2e8f0;
+    color: var(--irsi-gray);
+  }
+
+  .btn-wizard-secondary:hover {
+    background: #cbd5e1;
+    color: var(--irsi-dark);
+  }
+
+  .btn-wizard-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: var(--irsi-white);
+  }
+
+  .btn-wizard-success:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-wizard:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Required field indicator */
+  .required::after {
+    content: ' *';
+    color: #ef4444;
+    font-weight: bold;
+  }
+
+  /* Textarea specific */
+  textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .wizard-header {
+      padding: 1.5rem;
+    }
+
+    .wizard-title {
+      font-size: 1.5rem;
+    }
+
+    .progress-container {
+      padding: 1.5rem 1rem 1rem 1rem;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+    }
+
+    .step-label {
+      font-size: 0.8rem;
+    }
+
+    .form-content {
+      padding: 1.5rem;
+    }
+
+    .form-navigation {
+      padding: 1.5rem;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn-wizard {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* Loading state */
+  .btn-loading {
+    position: relative;
+    color: transparent !important;
+  }
+
+  .btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Field icons */
+  .field-icon {
+    color: var(--irsi-secondary);
+    font-size: 1rem;
+  }
+
+  /* Validation messages */
+  .validation-summary {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: #991b1b;
+  }
+
+  .validation-summary h6 {
+    color: #991b1b;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .validation-summary ul {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+</style>
 {% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/solicitantes.js') }}"></script>
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+      
+      <!-- Form Wizard -->
+      <div class="form-wizard">
+        <!-- Header -->
+        <div class="wizard-header">
+          <h1 class="wizard-title">
+            <i class="bi bi-person-plus-fill"></i>
+            {{ solicitante and 'Editar Solicitante' or 'Nuevo Solicitante' }}
+          </h1>
+          <p class="wizard-subtitle">
+            {{ solicitante and 'Actualiza la información del solicitante' or 'Complete toda la información requerida para procesar la solicitud' }}
+          </p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="progress-container">
+          <div class="step-indicator">
+            <div class="progress-line" id="progressLine"></div>
+            
+            <div class="step-item active" data-step="1">
+              <div class="step-circle">
+                <i class="bi bi-person-fill"></i>
+              </div>
+              <div class="step-label">Datos Personales</div>
+            </div>
+            
+            <div class="step-item" data-step="2">
+              <div class="step-circle">
+                <i class="bi bi-mortarboard-fill"></i>
+              </div>
+              <div class="step-label">Información Académica</div>
+            </div>
+            
+            <div class="step-item" data-step="3">
+              <div class="step-circle">
+                <i class="bi bi-graph-up"></i>
+              </div>
+              <div class="step-label">Datos Socioeconómicos</div>
+            </div>
+            
+            <div class="step-item" data-step="4">
+              <div class="step-circle">
+                <i class="bi bi-bookmark-star-fill"></i>
+              </div>
+              <div class="step-label">Programa Solicitado</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Content -->
+        <form id="multiStepForm"
+              method="post"
+              enctype="multipart/form-data"
+              action="{% if solicitante %}{{ url_for('solicitantes.edit_solicitante', solicitante_id=solicitante.id) }}{% else %}{{ url_for('solicitantes.create_solicitante') }}{% endif %}"
+              novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="form-content">
+            <!-- Paso 1: Datos Personales -->
+            <div class="step active" id="step-1">
+              <h3 class="step-title">
+                <i class="bi bi-person-fill field-icon"></i>
+                Información Personal
+              </h3>
+              <p class="step-subtitle">Proporcione sus datos personales básicos para el registro.</p>
+
+              <div class="form-row">
+                <div class="mb-3">
+                  {{ form.nombre.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person field-icon"></i></span>
+                    {{ form.nombre(class="form-control", placeholder="Ingrese su nombre completo") }}
+                  </div>
+                  {% for error in form.nombre.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row two-cols">
+                <div class="mb-3">
+                  {{ form.documento.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-card-text field-icon"></i></span>
+                    {{ form.documento(class="form-control", placeholder="Número de documento") }}
+                  </div>
+                  {% for error in form.documento.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                  {{ form.fecha_nacimiento.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar field-icon"></i></span>
+                    {{ form.fecha_nacimiento(class="form-control", type="date") }}
+                  </div>
+                  {% for error in form.fecha_nacimiento.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row two-cols">
+                <div class="mb-3">
+                  {{ form.genero.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-gender-ambiguous field-icon"></i></span>
+                    {{ form.genero(class="form-select") }}
+                  </div>
+                  {% for error in form.genero.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                  {{ form.pais.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-globe field-icon"></i></span>
+                    {{ form.pais(class="form-select") }}
+                  </div>
+                  {% for error in form.pais.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="mb-3">
+                  {{ form.ciudad.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt field-icon"></i></span>
+                    {{ form.ciudad(class="form-control", placeholder="Ciudad de residencia") }}
+                  </div>
+                  {% for error in form.ciudad.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row two-cols">
+                <div class="mb-3">
+                  {{ form.telefonos.label(class="form-label") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-telephone field-icon"></i></span>
+                    {{ form.telefonos(class="form-control", placeholder="Número de teléfono") }}
+                  </div>
+                  {% for error in form.telefonos.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                  {{ form.emails.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope field-icon"></i></span>
+                    {{ form.emails(class="form-control", placeholder="correo@ejemplo.com") }}
+                  </div>
+                  {% for error in form.emails.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Paso 2: Datos Académicos -->
+            <div class="step" id="step-2">
+              <h3 class="step-title">
+                <i class="bi bi-mortarboard-fill field-icon"></i>
+                Información Académica
+              </h3>
+              <p class="step-subtitle">Detalle su historial académico y experiencia técnica.</p>
+
+              <div class="form-row two-cols">
+                <div class="mb-3">
+                  {{ form.nivel_educativo.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-book field-icon"></i></span>
+                    {{ form.nivel_educativo(class="form-select") }}
+                  </div>
+                  {% for error in form.nivel_educativo.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                  {{ form.promedio.label(class="form-label") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-star field-icon"></i></span>
+                    {{ form.promedio(class="form-control", placeholder="0.0 - 10.0", step="0.1", min="0", max="10") }}
+                  </div>
+                  {% for error in form.promedio.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="mb-3">
+                  {{ form.institucion.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-building field-icon"></i></span>
+                    {{ form.institucion(class="form-control", placeholder="Nombre de la institución educativa") }}
+                  </div>
+                  {% for error in form.institucion.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="mb-3">
+                  {{ form.experiencia_tech.label(class="form-label") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-code-slash field-icon"></i></span>
+                    {{ form.experiencia_tech(class="form-control", rows=4, placeholder="Describa su experiencia con tecnología, programación, cursos online, proyectos personales, etc.") }}
+                  </div>
+                  {% for error in form.experiencia_tech.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Paso 3: Información Socioeconómica -->
+            <div class="step" id="step-3">
+              <h3 class="step-title">
+                <i class="bi bi-graph-up field-icon"></i>
+                Situación Socioeconómica
+              </h3>
+              <p class="step-subtitle">Esta información nos ayuda a evaluar su perfil socioeconómico.</p>
+
+              <div class="form-row two-cols">
+                <div class="mb-3">
+                  {{ form.situacion_laboral.label(class="form-label") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-briefcase field-icon"></i></span>
+                    {{ form.situacion_laboral(class="form-control", placeholder="Ej: Estudiante, Empleado, Desempleado") }}
+                  </div>
+                  {% for error in form.situacion_laboral.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                  {{ form.ingresos.label(class="form-label") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-currency-dollar field-icon"></i></span>
+                    {{ form.ingresos(class="form-control", placeholder="Ingresos mensuales aproximados", min="0") }}
+                  </div>
+                  {% for error in form.ingresos.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row two-cols">
+                <div class="mb-3">
+                  {{ form.acceso_tecnologia.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-laptop field-icon"></i></span>
+                    {{ form.acceso_tecnologia(class="form-select") }}
+                  </div>
+                  {% for error in form.acceso_tecnologia.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                  {{ form.dependientes.label(class="form-label") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-people field-icon"></i></span>
+                    {{ form.dependientes(class="form-control", placeholder="Número de dependientes económicos", min="0") }}
+                  </div>
+                  {% for error in form.dependientes.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Paso 4: Información del Programa -->
+            <div class="step" id="step-4">
+              <h3 class="step-title">
+                <i class="bi bi-bookmark-star-fill field-icon"></i>
+                Programa de Interés
+              </h3>
+              <p class="step-subtitle">Seleccione el programa que desea cursar y proporcione información adicional.</p>
+
+              <div class="form-row two-cols">
+                <div class="mb-3">
+                  {{ form.programa_solicitado.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-bookmark field-icon"></i></span>
+                    {{ form.programa_solicitado(class="form-select") }}
+                  </div>
+                  {% for error in form.programa_solicitado.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                  {{ form.modalidad.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-display field-icon"></i></span>
+                    {{ form.modalidad(class="form-select") }}
+                  </div>
+                  {% for error in form.modalidad.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="mb-3">
+                  {{ form.disponibilidad.label(class="form-label") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-clock field-icon"></i></span>
+                    {{ form.disponibilidad(class="form-control", placeholder="Ej: Horario matutino, vespertino, fines de semana") }}
+                  </div>
+                  {% for error in form.disponibilidad.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="mb-3">
+                  {{ form.motivacion.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-heart field-icon"></i></span>
+                    {{ form.motivacion(class="form-control", rows=4, placeholder="Explique por qué desea participar en este programa y cómo contribuirá a su desarrollo personal y profesional") }}
+                  </div>
+                  {% for error in form.motivacion.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="mb-3">
+                  {{ form.objetivos.label(class="form-label required") }}
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-target field-icon"></i></span>
+                    {{ form.objetivos(class="form-control", rows=4, placeholder="Describa sus objetivos académicos y profesionales al completar este programa") }}
+                  </div>
+                  {% for error in form.objetivos.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation -->
+          <div class="form-navigation">
+            <button type="button" id="prevBtn" class="btn-wizard btn-wizard-secondary" style="display: none;">
+              <i class="bi bi-arrow-left"></i>
+              Anterior
+            </button>
+            
+            <div id="stepInfo" class="text-muted">
+              Paso <span id="currentStep">1</span> de <span id="totalSteps">4</span>
+            </div>
+
+            <button type="button" id="nextBtn" class="btn-wizard btn-wizard-primary">
+              Siguiente
+              <i class="bi bi-arrow-right"></i>
+            </button>
+
+            <button type="submit" id="submitBtn" class="btn-wizard btn-wizard-success" style="display: none;">
+              <i class="bi bi-check-circle"></i>
+              {{ solicitante and 'Actualizar Solicitante' or 'Registrar Solicitante' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentStep = 1;
+    const totalSteps = 4;
+    const form = document.getElementById('multiStepForm');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressLine = document.getElementById('progressLine');
+    const currentStepSpan = document.getElementById('currentStep');
+
+    // Función para mostrar el paso actual
+    function showStep(step) {
+        // Ocultar todos los pasos
+        document.querySelectorAll('.step').forEach(stepEl => {
+            stepEl.classList.remove('active');
+        });
+        
+        // Mostrar el paso actual
+        document.getElementById(`step-${step}`).classList.add('active');
+        
+        // Actualizar indicadores de progreso
+        updateProgressIndicator(step);
+        
+        // Actualizar botones de navegación
+        updateNavigationButtons(step);
+        
+        // Actualizar contador de pasos
+        currentStepSpan.textContent = step;
+    }
+
+    // Función para actualizar el indicador de progreso
+    function updateProgressIndicator(step) {
+        const progressWidth = ((step - 1) / (totalSteps - 1)) * 100;
+        progressLine.style.width = `${progressWidth}%`;
+        
+        document.querySelectorAll('.step-item').forEach((item, index) => {
+            const stepNumber = index + 1;
+            const circle = item.querySelector('.step-circle');
+            
+            item.classList.remove('active', 'completed');
+            circle.classList.remove('active', 'completed');
+            
+            if (stepNumber < step) {
+                item.classList.add('completed');
+                circle.classList.add('completed');
+                circle.innerHTML = '<i class="bi bi-check"></i>';
+            } else if (stepNumber === step) {
+                item.classList.add('active');
+                circle.classList.add('active');
+                circle.innerHTML = `<i class="bi bi-${getStepIcon(stepNumber)}"></i>`;
+            } else {
+                circle.innerHTML = `<i class="bi bi-${getStepIcon(stepNumber)}"></i>`;
+            }
+        });
+    }
+
+    // Función para obtener el ícono de cada paso
+    function getStepIcon(stepNumber) {
+        const icons = {
+            1: 'person-fill',
+            2: 'mortarboard-fill',
+            3: 'graph-up',
+            4: 'bookmark-star-fill'
+        };
+        return icons[stepNumber] || 'circle';
+    }
+
+    // Función para actualizar botones de navegación
+    function updateNavigationButtons(step) {
+        // Botón anterior
+        if (step === 1) {
+            prevBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = 'flex';
+        }
+        
+        // Botón siguiente y enviar
+        if (step === totalSteps) {
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'flex';
+        } else {
+            nextBtn.style.display = 'flex';
+            submitBtn.style.display = 'none';
+        }
+    }
+
+    // Función para validar el paso actual
+    function validateCurrentStep(step) {
+        const currentStepElement = document.getElementById(`step-${step}`);
+        const requiredFields = currentStepElement.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            // Limpiar clases de validación previas
+            field.classList.remove('is-valid', 'is-invalid');
+            
+            // Validar campo
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.add('is-valid');
+            }
+            
+            // Validaciones específicas
+            if (field.type === 'email' && field.value.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(field.value.trim())) {
+                    field.classList.remove('is-valid');
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+        });
+        
+        return isValid;
+    }
+
+    // Función para mostrar errores de validación
+    function showValidationErrors(step) {
+        const currentStepElement = document.getElementById(`step-${step}`);
+        const invalidFields = currentStepElement.querySelectorAll('.is-invalid');
+        
+        if (invalidFields.length > 0) {
+            // Mostrar mensaje de error general
+            let errorMessage = document.querySelector('.validation-summary');
+            if (!errorMessage) {
+                errorMessage = document.createElement('div');
+                errorMessage.className = 'validation-summary';
+                currentStepElement.insertBefore(errorMessage, currentStepElement.firstChild);
+            }
+            
+            errorMessage.innerHTML = `
+                <h6><i class="bi bi-exclamation-triangle"></i> Por favor complete los campos requeridos</h6>
+                <ul>
+                    ${Array.from(invalidFields).map(field => 
+                        `<li>${field.closest('.mb-3').querySelector('label').textContent.replace('*', '').trim()}</li>`
+                    ).join('')}
+                </ul>
+            `;
+            
+            // Scroll al primer campo con error
+            invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            invalidFields[0].focus();
+        }
+    }
+
+    // Event listeners para botones de navegación
+    nextBtn.addEventListener('click', function() {
+        if (validateCurrentStep(currentStep)) {
+            // Limpiar mensajes de error
+            const errorMessage = document.querySelector('.validation-summary');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+            
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        } else {
+            showValidationErrors(currentStep);
+        }
+    });
+
+    prevBtn.addEventListener('click', function() {
+        if (currentStep > 1) {
+            // Limpiar mensajes de error
+            const errorMessage = document.querySelector('.validation-summary');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+            
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+
+    // Event listener para el formulario
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validar el último paso
+        if (!validateCurrentStep(currentStep)) {
+            showValidationErrors(currentStep);
+            return;
+        }
+        
+        // Validar todos los pasos
+        let allValid = true;
+        for (let i = 1; i <= totalSteps; i++) {
+            if (!validateCurrentStep(i)) {
+                allValid = false;
+                // Ir al primer paso con errores
+                currentStep = i;
+                showStep(currentStep);
+                showValidationErrors(currentStep);
+                break;
+            }
+        }
+        
+        if (allValid) {
+            // Mostrar estado de carga
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+            
+            // Simular envío (reemplazar con envío real)
+            setTimeout(() => {
+                // Aquí enviarías el formulario real
+                form.submit();
+            }, 1000);
+        }
+    });
+
+    // Event listeners para validación en tiempo real
+    form.addEventListener('input', function(e) {
+        const field = e.target;
+        
+        if (field.hasAttribute('required') || field.type === 'email') {
+            // Limpiar clases previas
+            field.classList.remove('is-valid', 'is-invalid');
+            
+            // Validar en tiempo real
+            if (field.value.trim()) {
+                if (field.type === 'email') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (emailRegex.test(field.value.trim())) {
+                        field.classList.add('is-valid');
+                    } else {
+                        field.classList.add('is-invalid');
+                    }
+                } else {
+                    field.classList.add('is-valid');
+                }
+            }
+        }
+    });
+
+    // Event listeners para navegación por teclado
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            if (currentStep < totalSteps) {
+                nextBtn.click();
+            } else {
+                submitBtn.click();
+            }
+        }
+    });
+
+    // Inicializar el formulario
+    showStep(1);
+    
+    // Auto-focus en el primer campo
+    setTimeout(() => {
+        const firstField = document.querySelector('#step-1 .form-control');
+        if (firstField) {
+            firstField.focus();
+        }
+    }, 100);
+});
+</script>
 {% endblock %}
