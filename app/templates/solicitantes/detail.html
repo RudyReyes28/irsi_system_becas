@@ -1,147 +1,785 @@
 {% extends 'base.html' %}
-{% block title %}Detalle Solicitante{% endblock %}
+{% block title %}Detalle Solicitante - {{ solicitante.nombre }}{% endblock %}
+
 {% block head %}
-  <style>
-    .drop-zone {
-      border: 2px dashed #6c757d;
-      border-radius: 5px;
-      padding: 20px;
+<style>
+  /* Estilos personalizados para el detalle del solicitante */
+  .profile-header {
+    background: linear-gradient(135deg, var(--irsi-primary) 0%, var(--irsi-secondary) 100%);
+    border-radius: 20px;
+    color: white;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-white));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--irsi-primary);
+    margin-bottom: 1rem;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-en-revision { background: linear-gradient(45deg, #ffc107, #ffeb3b); color: #856404; }
+  .status-aprobado { background: linear-gradient(45deg, #28a745, #4caf50); color: white; }
+  .status-rechazado { background: linear-gradient(45deg, #dc3545, #f44336); color: white; }
+  .status-pendiente { background: linear-gradient(45deg, #17a2b8, #00bcd4); color: white; }
+
+  .info-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: none;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+
+  .info-card-header {
+    background: linear-gradient(135deg, var(--irsi-light), #e2e8f0);
+    padding: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+  }
+
+  .info-card-header i {
+    font-size: 1.5rem;
+    color: var(--irsi-secondary);
+    margin-right: 0.75rem;
+  }
+
+  .info-card-header h5 {
+    margin: 0;
+    color: var(--irsi-dark);
+    font-weight: 600;
+  }
+
+  .info-row {
+    display: flex;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-row:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  .info-label {
+    font-weight: 600;
+    color: var(--irsi-gray);
+    min-width: 140px;
+    margin-right: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .info-value {
+    color: var(--irsi-dark);
+    flex: 1;
+    font-size: 0.9rem;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--irsi-secondary), var(--irsi-accent));
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-left: 1rem;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -1.75rem;
+    top: 1.25rem;
+    width: 12px;
+    height: 12px;
+    background: var(--irsi-secondary);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px var(--irsi-secondary);
+  }
+
+  .timeline-date {
+    font-size: 0.8rem;
+    color: var(--irsi-gray);
+    margin-bottom: 0.5rem;
+  }
+
+  .timeline-title {
+    font-weight: 600;
+    color: var(--irsi-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .timeline-user {
+    font-size: 0.875rem;
+    color: var(--irsi-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .timeline-comment {
+    font-size: 0.875rem;
+    color: var(--irsi-gray);
+    font-style: italic;
+    background: var(--irsi-light);
+    padding: 0.5rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--irsi-accent);
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--irsi-secondary);
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    color: var(--irsi-gray);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .drop-zone::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+  }
+
+  .drop-zone:hover {
+    border-color: var(--irsi-accent);
+    background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+    transform: translateY(-2px);
+  }
+
+  .drop-zone.dragover {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-color: var(--irsi-accent);
+    transform: scale(1.02);
+  }
+
+  .drop-zone i {
+    font-size: 3rem;
+    color: var(--irsi-secondary);
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .document-item {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid var(--irsi-accent);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .document-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .document-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: white;
+    font-size: 1.2rem;
+  }
+
+  .btn-irsi-primary {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .btn-irsi-primary:hover {
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    color: white;
+  }
+
+  .btn-irsi-primary i {
+    margin-right: 0.5rem;
+  }
+
+  .btn-irsi-secondary {
+    background: linear-gradient(135deg, var(--irsi-accent), #0891b2);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-irsi-secondary:hover {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(6, 182, 212, 0.3);
+    color: white;
+  }
+
+  .btn-irsi-warning {
+    background: linear-gradient(135deg, #f59e0b, #eab308);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-irsi-warning:hover {
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+    color: white;
+  }
+
+  .modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 1.5rem;
+  }
+
+  .modal-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+  }
+
+  .modal-title i {
+    margin-right: 0.75rem;
+    font-size: 1.25rem;
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--irsi-secondary);
+  }
+
+  .page-header {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 5px solid var(--irsi-secondary);
+  }
+
+  .page-title {
+    color: var(--irsi-dark);
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .page-title i {
+    margin-right: 0.75rem;
+    color: var(--irsi-secondary);
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .profile-header {
+      padding: 1.5rem;
       text-align: center;
-      color: #6c757d;
-      cursor: pointer;
     }
-    .drop-zone.dragover {
-      background-color: #e9ecef;
+    
+    .action-buttons {
+      flex-direction: column;
     }
-  </style>
+    
+    .info-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .info-label {
+      min-width: auto;
+      margin-bottom: 0.25rem;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2>Detalle de Solicitante: {{ solicitante.nombre }}</h2>
-  <!-- Datos básicos -->
-  <table class="table table-striped">
-    <tr><th>Email:</th><td>{{ solicitante.emails }}</td></tr>
-    <tr><th>Documento de Identificacion:</th><td>{{ solicitante.documento }}</td></tr>
-    <tr><th>Programa:</th><td>{{ solicitante.programa_legible }}</td></tr>
-    <tr><th>Estado:</th><td>{{ solicitante.estado_legible }}</td></tr>
-    <!-- Agrega más campos según necesidad -->
-  </table>
+<div class="container-fluid py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Inicio</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('solicitantes.list_solicitantes') }}" class="text-decoration-none">Solicitantes</a></li>
+      <li class="breadcrumb-item active">{{ solicitante.nombre }}</li>
+    </ol>
+  </nav>
 
-  <!-- Historial de Estados -->
-  <h5>Historial de Estados</h5>
-  <ul class="list-group mb-4">
-    {% for h in historial %}
-    <li class="list-group-item d-flex justify-content-between">
-      <div>
-        <strong>{{ h.estado.name.replace("_", " ").title() }}</strong> por {{ h.usuario.nombre }}<br>
-        <small>{{ h.fecha.strftime('%Y-%m-%d %H:%M') }}</small>
-        {% if h.comentario %}<br><small>Comentario: {{ h.comentario }}</small>{% endif %}
+  <!-- Header del Perfil -->
+  <div class="profile-header">
+    <div class="row align-items-center">
+      <div class="col-md-2 text-center">
+        <div class="profile-avatar">
+          {{ solicitante.nombre[0].upper() }}
+        </div>
       </div>
-    </li>
-    {% endfor %}
-  </ul>
+      <div class="col-md-7">
+        <h1 class="mb-2">{{ solicitante.nombre }}</h1>
+        <p class="mb-2 opacity-75">
+          <i class="bi bi-envelope me-2"></i>{{ solicitante.emails }}
+        </p>
+        <p class="mb-0 opacity-75">
+          <i class="bi bi-calendar me-2"></i>Registrado el {{ solicitante.fecha_registro.strftime('%d/%m/%Y') }}
+        </p>
+      </div>
+      <div class="col-md-3 text-center">
+        <div class="status-badge status-{{ solicitante.estado.name.lower().replace('_', '-') }}">
+          {{ solicitante.estado_legible }}
+        </div>
+        <div class="mt-2">
+          <small class="opacity-75">{{ solicitante.programa_legible }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  {% if mostrar_compare %}
-  <a href="{{ url_for('solicitantes.compare_solicitante', solicitante_id=solicitante.id) }}"
-     class="btn btn-outline-info mb-3">
-    Ver comparaciones
-  </a>
-<!-- Botón para abrir el modal -->
-<button class="btn btn-warning mb-3" data-bs-toggle="modal" data-bs-target="#changeStateModal">
-  Cambiar Estado
-</button>
+  <!-- Botones de Acción -->
+  <div class="action-buttons">
+    <button class="btn btn-irsi-warning" data-bs-toggle="modal" data-bs-target="#changeStateModal">
+      <i class="bi bi-arrow-repeat"></i>
+      Cambiar Estado
+    </button>
+    
+    {% if mostrar_compare %}
+    <a href="{{ url_for('solicitantes.compare_solicitante', solicitante_id=solicitante.id) }}" 
+       class="btn btn-irsi-secondary">
+      <i class="bi bi-files"></i>
+      Ver Comparaciones
+    </a>
+    {% endif %}
+    
+    <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i>
+      Volver al Listado
+    </a>
+  </div>
+
+  <div class="row">
+    <!-- Columna Principal -->
+    <div class="col-lg-8">
+      <!-- Información Personal -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <i class="bi bi-person-fill"></i>
+          <h5>Información Personal</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="info-row">
+            <span class="info-label">Documento ID:</span>
+            <span class="info-value">{{ solicitante.documento }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Fecha Nacimiento:</span>
+            <span class="info-value">{{ solicitante.fecha_nacimiento.strftime('%d/%m/%Y') if solicitante.fecha_nacimiento else 'No especificada' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Género:</span>
+            <span class="info-value">{{ solicitante.genero.value if solicitante.genero else 'No especificado' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">País:</span>
+            <span class="info-value">{{ solicitante.pais.value if solicitante.pais else 'No especificado' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Ciudad:</span>
+            <span class="info-value">{{ solicitante.ciudad or 'No especificada' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Teléfonos:</span>
+            <span class="info-value">{{ solicitante.telefonos or 'No especificados' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información Académica -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <i class="bi bi-mortarboard-fill"></i>
+          <h5>Información Académica</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="info-row">
+            <span class="info-label">Nivel Educativo:</span>
+            <span class="info-value">{{ solicitante.nivel_educativo or 'No especificado' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Institución:</span>
+            <span class="info-value">{{ solicitante.institucion or 'No especificada' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Promedio:</span>
+            <span class="info-value">
+              {% if solicitante.promedio %}
+                <span class="badge bg-primary">{{ "%.2f"|format(solicitante.promedio) }}</span>
+              {% else %}
+                No especificado
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Experiencia Tech:</span>
+            <span class="info-value">{{ solicitante.experiencia_tech or 'No especificada' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información Socioeconómica -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <i class="bi bi-graph-up"></i>
+          <h5>Información Socioeconómica</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="info-row">
+            <span class="info-label">Situación Laboral:</span>
+            <span class="info-value">{{ solicitante.situacion_laboral or 'No especificada' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Ingresos:</span>
+            <span class="info-value">
+              {% if solicitante.ingresos %}
+                ${{ "{:,.2f}".format(solicitante.ingresos) }}
+              {% else %}
+                No especificados
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Acceso Tecnología:</span>
+            <span class="info-value">{{ solicitante.acceso_tecnologia or 'No especificado' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Dependientes:</span>
+            <span class="info-value">{{ solicitante.dependientes or 0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del Programa -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <i class="bi bi-laptop"></i>
+          <h5>Información del Programa</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="info-row">
+            <span class="info-label">Modalidad:</span>
+            <span class="info-value">{{ solicitante.modalidad.value if solicitante.modalidad else 'No especificada' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Disponibilidad:</span>
+            <span class="info-value">{{ solicitante.disponibilidad or 'No especificada' }}</span>
+          </div>
+          {% if solicitante.motivacion %}
+          <div class="info-row">
+            <span class="info-label">Motivación:</span>
+            <span class="info-value">{{ solicitante.motivacion }}</span>
+          </div>
+          {% endif %}
+          {% if solicitante.objetivos %}
+          <div class="info-row">
+            <span class="info-label">Objetivos:</span>
+            <span class="info-value">{{ solicitante.objetivos }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna Lateral -->
+    <div class="col-lg-4">
+      <!-- Historial de Estados -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <i class="bi bi-clock-history"></i>
+          <h5>Historial de Estados</h5>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            {% for h in historial %}
+            <div class="timeline-item">
+              <div class="timeline-date">{{ h.fecha.strftime('%d/%m/%Y %H:%M') }}</div>
+              <div class="timeline-title">{{ h.estado.name.replace("_", " ").title() }}</div>
+              <div class="timeline-user">
+                <i class="bi bi-person-circle me-1"></i>
+                {{ h.usuario.nombre }}
+              </div>
+              {% if h.comentario %}
+              <div class="timeline-comment">
+                <i class="bi bi-chat-text me-1"></i>
+                {{ h.comentario }}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentos -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <i class="bi bi-file-earmark-text"></i>
+          <h5>Documentos</h5>
+        </div>
+        <div class="card-body">
+          <!-- Zona de Carga -->
+          <div id="dropZone" class="drop-zone mb-3">
+            <i class="bi bi-cloud-upload"></i>
+            <strong>Arrastra archivos aquí</strong><br>
+            <small>o haz clic para seleccionar</small>
+          </div>
+
+          <form id="fileForm" method="post" enctype="multipart/form-data" 
+                action="{{ url_for('solicitantes.upload_document', solicitante_id=solicitante.id) }}">
+            <input type="file" name="documento" id="fileInput" class="d-none" multiple accept=".pdf,.doc,.docx,.jpg,.png">
+          </form>
+
+          <!-- Lista de Documentos -->
+          <div class="mt-3">
+            {% if documentos %}
+              {% for doc in documentos %}
+                <div class="document-item">
+                  <div class="document-icon">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <a href="{{ url_for('uploaded_file', solicitante_id=solicitante.id, filename=doc) }}" 
+                       target="_blank" class="text-decoration-none text-dark fw-medium">
+                      {{ doc }}
+                    </a>
+                    <div class="text-muted small">
+                      <i class="bi bi-download me-1"></i>
+                      Descargar documento
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox display-4 mb-3"></i>
+                <p>No hay documentos cargados.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Modal de cambio de estado -->
 <div class="modal fade" id="changeStateModal" tabindex="-1" aria-labelledby="changeStateLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <form method="post" action="{{ url_for('solicitantes.change_state', solicitante_id=solicitante.id) }}">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="changeStateLabel">Cambiar Estado de Solicitud</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <h5 class="modal-title" id="changeStateLabel">
+            <i class="bi bi-arrow-repeat"></i>
+            Cambiar Estado de Solicitud
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body p-4">
           <div class="mb-3">
-            <label for="estadoSelect" class="form-label">Nuevo Estado</label>
-            <select id="estadoSelect" name="estado" class="form-select" required>
+            <label for="estadoSelect" class="form-label fw-bold">
+              <i class="bi bi-flag me-2"></i>Nuevo Estado
+            </label>
+            <select id="estadoSelect" name="estado" class="form-select form-select-lg" required>
               {% for st in EstadoSolicitud %}
-                <option value="{{ st.name }}"
-                  {% if st == solicitante.estado %}selected{% endif %}>
-                  {{ st.value }}  <!-- mostramos el label legible -->
+                <option value="{{ st.name }}" {% if st == solicitante.estado %}selected{% endif %}>
+                  {{ st.value }}
                 </option>
               {% endfor %}
             </select>
           </div>
           <div class="mb-3">
-            <label for="comentarioInput" class="form-label">Comentario (opcional)</label>
-            <textarea id="comentarioInput" name="comentario" class="form-control" rows="2"></textarea>
+            <label for="comentarioInput" class="form-label fw-bold">
+              <i class="bi bi-chat-text me-2"></i>Comentario (opcional)
+            </label>
+            <textarea id="comentarioInput" name="comentario" class="form-control" rows="3" 
+                      placeholder="Agrega un comentario sobre este cambio de estado..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Cambio</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-2"></i>Cancelar
+          </button>
+          <button type="submit" class="btn btn-irsi-primary">
+            <i class="bi bi-check-lg me-2"></i>Guardar Cambio
+          </button>
         </div>
       </div>
     </form>
   </div>
-</div>
-
-
-{% endif %}
-
-  <!-- Carga de Documentos Drag & Drop -->
-  <h5>Documentos</h5>
-  <div id="dropZone" class="drop-zone mb-3">
-    Arrastra archivos aquí o haz clic para seleccionar
-  </div>
-  <form id="fileForm" method="post" enctype="multipart/form-data" action="{{ url_for('solicitantes.upload_document', solicitante_id=solicitante.id) }}">
-    <input type="file" name="documento" id="fileInput" class="d-none">
-  </form>
-  <ul class="list-group">
-    {% if documentos %}
-      {% for doc in documentos %}
-        <li class="list-group-item">
-          <a href="{{ url_for('uploaded_file',
-                              solicitante_id=solicitante.id,
-                              filename=doc) }}"
-             target="_blank">
-            {{ doc }}
-          </a>
-        </li>
-      {% endfor %}
-    {% else %}
-      <li class="list-group-item text-muted">No hay documentos cargados.</li>
-    {% endif %}
-  </ul>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/solicitantes.js') }}"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileForm = document.getElementById('fileForm');
+document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileForm = document.getElementById('fileForm');
 
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      if (e.dataTransfer.files.length) {
-        fileInput.files = e.dataTransfer.files;
-        fileForm.submit();
-      }
-    });
-
-    fileInput.addEventListener('change', () => fileForm.submit());
+  // Funcionalidad del drag & drop
+  dropZone.addEventListener('click', () => fileInput.click());
+  
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
   });
+  
+  dropZone.addEventListener('dragleave', (e) => {
+    if (!dropZone.contains(e.relatedTarget)) {
+      dropZone.classList.remove('dragover');
+    }
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      fileForm.submit();
+    }
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+      fileForm.submit();
+    }
+  });
+
+  // Validación del formulario de cambio de estado
+  const changeStateForm = document.querySelector('#changeStateModal form');
+  changeStateForm.addEventListener('submit', (e) => {
+    const estado = document.getElementById('estadoSelect').value;
+    if (!estado) {
+      e.preventDefault();
+      alert('Por favor selecciona un estado.');
+      return false;
+    }
+  });
+
+  // Efectos de hover para las cards
+  const infoCards = document.querySelectorAll('.info-card');
+  infoCards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.style.transform = 'translateY(-2px)';
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'translateY(0)';
+    });
+  });
+});
 </script>
 {% endblock %}

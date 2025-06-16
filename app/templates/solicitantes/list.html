@@ -49,16 +49,10 @@
                   <i class="bi bi-person me-1"></i>
                   Nombre
                 </label>
-                <input 
-                  type="text" 
-                  name="nombre" 
-                  class="form-control form-control-lg" 
-                  placeholder="Buscar por nombre..." 
-                  value="{{ filtros.nombre }}"
-                  autocomplete="off"
-                >
+                <input type="text" name="nombre" class="form-control form-control-lg" placeholder="Buscar por nombre..."
+                  value="{{ filtros.nombre }}" autocomplete="off">
               </div>
-              
+
               <div class="col-lg-3 col-md-6">
                 <label class="form-label fw-semibold text-muted">
                   <i class="bi bi-laptop me-1"></i>
@@ -67,13 +61,13 @@
                 <select name="programa" class="form-select form-select-lg">
                   <option value="">Todos los programas</option>
                   {% for val, label in form.programa_solicitado.choices %}
-                    <option value="{{ val }}" {% if filtros.programa == val %}selected{% endif %}>
-                      {{ label }}
-                    </option>
+                  <option value="{{ val }}" {% if filtros.programa==val %}selected{% endif %}>
+                    {{ label }}
+                  </option>
                   {% endfor %}
                 </select>
               </div>
-              
+
               <div class="col-lg-3 col-md-6">
                 <label class="form-label fw-semibold text-muted">
                   <i class="bi bi-check-circle me-1"></i>
@@ -82,17 +76,17 @@
                 <select name="estado" class="form-select form-select-lg">
                   <option value="">Todos los estados</option>
                   {% for estado in ['REGISTRADO','EN_REVISION','APROBADO','RECHAZADO'] %}
-                    <option value="{{ estado }}" {% if filtros.estado == estado %}selected{% endif %}>
-                      {% if estado == 'REGISTRADO' %}Registrado
-                      {% elif estado == 'EN_REVISION' %}En Revisión
-                      {% elif estado == 'APROBADO' %}Aprobado
-                      {% elif estado == 'RECHAZADO' %}Rechazado
-                      {% endif %}
-                    </option>
+                  <option value="{{ estado }}" {% if filtros.estado==estado %}selected{% endif %}>
+                    {% if estado == 'REGISTRADO' %}Registrado
+                    {% elif estado == 'EN_REVISION' %}En Revisión
+                    {% elif estado == 'APROBADO' %}Aprobado
+                    {% elif estado == 'RECHAZADO' %}Rechazado
+                    {% endif %}
+                  </option>
                   {% endfor %}
                 </select>
               </div>
-              
+
               <div class="col-lg-3 col-md-6">
                 <label class="form-label fw-semibold text-muted">
                   <i class="bi bi-globe me-1"></i>
@@ -101,14 +95,14 @@
                 <select name="pais" class="form-select form-select-lg">
                   <option value="">Todos los países</option>
                   {% for val, label in form.pais.choices %}
-                    <option value="{{ val }}" {% if filtros.pais == val %}selected{% endif %}>
-                      {{ label }}
-                    </option>
+                  <option value="{{ val }}" {% if filtros.pais==val %}selected{% endif %}>
+                    {{ label }}
+                  </option>
                   {% endfor %}
                 </select>
               </div>
             </div>
-            
+
             <div class="row mt-4">
               <div class="col-12 d-flex gap-2 justify-content-end">
                 <button type="submit" class="btn btn-irsi-primary btn-lg px-4">
@@ -140,38 +134,38 @@
         </div>
       </div>
     </div>
-    
+
     <div class="col-lg-3 col-md-6 mb-3">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center">
           <div class="display-6 text-warning mb-2">
             <i class="bi bi-clock-fill"></i>
           </div>
-          <h4 class="fw-bold text-warning">-</h4>
+          <h4 class="fw-bold text-warning">{{ estadisticas.en_revision }}</h4>
           <p class="text-muted mb-0">En Revisión</p>
         </div>
       </div>
     </div>
-    
+
     <div class="col-lg-3 col-md-6 mb-3">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center">
           <div class="display-6 text-success mb-2">
             <i class="bi bi-check-circle-fill"></i>
           </div>
-          <h4 class="fw-bold text-success">-</h4>
+          <h4 class="fw-bold text-success">{{ estadisticas.aprobados }}</h4>
           <p class="text-muted mb-0">Aprobados</p>
         </div>
       </div>
     </div>
-    
+
     <div class="col-lg-3 col-md-6 mb-3">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center">
           <div class="display-6 text-danger mb-2">
             <i class="bi bi-x-circle-fill"></i>
           </div>
-          <h4 class="fw-bold text-danger">-</h4>
+          <h4 class="fw-bold text-danger">{{ estadisticas.rechazados }}</h4>
           <p class="text-muted mb-0">Rechazados</p>
         </div>
       </div>
@@ -194,7 +188,8 @@
                 Exportar
               </button>
               <div class="dropdown">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                  data-bs-toggle="dropdown">
                   <i class="bi bi-three-dots-vertical"></i>
                 </button>
                 <ul class="dropdown-menu">
@@ -205,142 +200,231 @@
             </div>
           </div>
         </div>
-        
+
         <div class="card-body p-0">
           {% if pagination.items %}
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th class="fw-semibold text-muted py-3 px-4">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="selectAll">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="fw-semibold text-muted py-3 px-4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="selectAll">
+                    </div>
+                  </th>
+                  <th class="fw-semibold text-muted py-3">ID</th>
+                  <th class="fw-semibold text-muted py-3">Solicitante</th>
+                  <th class="fw-semibold text-muted py-3">Programa</th>
+                  <th class="fw-semibold text-muted py-3">Estado</th>
+                  <th class="fw-semibold text-muted py-3">Fecha</th>
+                  <th class="fw-semibold text-muted py-3 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sol in pagination.items %}
+                <tr class="border-bottom">
+                  <td class="px-4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="{{ sol.id }}">
+                    </div>
+                  </td>
+                  <td class="py-3">
+                    <span class="badge bg-light text-dark fs-6">#{{ sol.id }}</span>
+                  </td>
+                  <td class="py-3">
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle me-3">
+                        {{ sol.nombre[0].upper() }}
                       </div>
-                    </th>
-                    <th class="fw-semibold text-muted py-3">ID</th>
-                    <th class="fw-semibold text-muted py-3">Solicitante</th>
-                    <th class="fw-semibold text-muted py-3">Programa</th>
-                    <th class="fw-semibold text-muted py-3">Estado</th>
-                    <th class="fw-semibold text-muted py-3">Fecha</th>
-                    <th class="fw-semibold text-muted py-3 text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for sol in pagination.items %}
-                  <tr class="border-bottom">
-                    <td class="px-4">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="{{ sol.id }}">
-                      </div>
-                    </td>
-                    <td class="py-3">
-                      <span class="badge bg-light text-dark fs-6">#{{ sol.id }}</span>
-                    </td>
-                    <td class="py-3">
-                      <div class="d-flex align-items-center">
-                        <div class="avatar-circle me-3">
-                          {{ sol.nombre[0].upper() }}
+                      <div>
+                        <div class="fw-semibold text-dark">{{ sol.nombre }}</div>
+                        <div class="text-muted small">
+                          <i class="bi bi-envelope me-1"></i>
+                          {{ sol.emails }}
                         </div>
-                        <div>
-                          <div class="fw-semibold text-dark">{{ sol.nombre }}</div>
-                          <div class="text-muted small">
-                            <i class="bi bi-envelope me-1"></i>
-                            {{ sol.emails }}
-                          </div>
-                        </div>
                       </div>
-                    </td>
-                    <td class="py-3">
-                      <span class="badge bg-primary-subtle text-primary rounded-pill">
-                        {{ sol.programa_legible }}
-                      </span>
-                    </td>
-                    <td class="py-3">
-                      {% if sol.estado.name == 'REGISTRADO' %}
-                        <span class="badge bg-info-subtle text-info rounded-pill">
-                          <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-                          Registrado
-                        </span>
-                      {% elif sol.estado.name == 'EN_REVISION' %}
-                        <span class="badge bg-warning-subtle text-warning rounded-pill">
-                          <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-                          En Revisión
-                        </span>
-                      {% elif sol.estado.name == 'APROBADO' %}
-                        <span class="badge bg-success-subtle text-success rounded-pill">
-                          <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-                          Aprobado
-                        </span>
-                      {% elif sol.estado.name == 'RECHAZADO' %}
-                        <span class="badge bg-danger-subtle text-danger rounded-pill">
-                          <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-                          Rechazado
-                        </span>
-                      {% elif sol.estado.name == 'CONVERTIDO' %}
-                        <span class="badge bg-success-subtle text-danger rounded-pill">
-                          <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-                          Convertido
-                        </span>
+                    </div>
+                  </td>
+                  <td class="py-3">
+                    <span class="badge bg-primary-subtle text-primary rounded-pill">
+                      {{ sol.programa_legible }}
+                    </span>
+                  </td>
+                  <td class="py-3">
+                    {% if sol.estado.name == 'REGISTRADO' %}
+                    <span class="badge bg-info-subtle text-info rounded-pill">
+                      <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                      Registrado
+                    </span>
+                    {% elif sol.estado.name == 'EN_REVISION' %}
+                    <span class="badge bg-warning-subtle text-warning rounded-pill">
+                      <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                      En Revisión
+                    </span>
+                    {% elif sol.estado.name == 'APROBADO' %}
+                    <span class="badge bg-success-subtle text-success rounded-pill">
+                      <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                      Aprobado
+                    </span>
+                    {% elif sol.estado.name == 'RECHAZADO' %}
+                    <span class="badge bg-danger-subtle text-danger rounded-pill">
+                      <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                      Rechazado
+                    </span>
+                    {% elif sol.estado.name == 'CONVERTIDO' %}
+                    <span class="badge bg-success-subtle text-danger rounded-pill">
+                      <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                      Convertido
+                    </span>
+                    {% endif %}
+                  </td>
+                  <td class="py-3">
+                    <div class="text-dark">{{ sol.fecha_registro.strftime('%d/%m/%Y') }}</div>
+                    <div class="text-muted small">{{ sol.fecha_registro.strftime('%H:%M') }}</div>
+                  </td>
+                  <td class="py-3 text-center">
+                    <div class="btn-group" role="group">
+                      <a href="{{ url_for('solicitantes.detail_solicitante', solicitante_id=sol.id) }}"
+                        class="btn btn-outline-primary btn-sm" data-bs-toggle="tooltip" title="Ver detalles">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      {% if current_user.rol in ['Administrador','Director','Asistente'] %}
+                      <a href="{{ url_for('solicitantes.edit_solicitante', solicitante_id=sol.id) }}"
+                        class="btn btn-outline-warning btn-sm" data-bs-toggle="tooltip" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                      </a>
                       {% endif %}
-                    </td>
-                    <td class="py-3">
-                      <div class="text-dark">{{ sol.fecha_registro.strftime('%d/%m/%Y') }}</div>
-                      <div class="text-muted small">{{ sol.fecha_registro.strftime('%H:%M') }}</div>
-                    </td>
-                    <td class="py-3 text-center">
-                      <div class="btn-group" role="group">
-                        <a href="{{ url_for('solicitantes.detail_solicitante', solicitante_id=sol.id) }}" 
-                           class="btn btn-outline-primary btn-sm" 
-                           data-bs-toggle="tooltip" 
-                           title="Ver detalles">
-                          <i class="bi bi-eye"></i>
-                        </a>
-                        {% if current_user.rol in ['Administrador','Director','Asistente'] %}
-                        <a href="{{ url_for('solicitantes.edit_solicitante', solicitante_id=sol.id) }}" 
-                           class="btn btn-outline-warning btn-sm"
-                           data-bs-toggle="tooltip" 
-                           title="Editar">
-                          <i class="bi bi-pencil"></i>
-                        </a>
+                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                        data-bs-toggle="dropdown">
+                        <span class="visually-hidden">Más acciones</span>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <a class="dropdown-item" href="#" onclick="verDocumentos({{ sol.id }})">
+                            <i class="bi bi-file-text me-2"></i>Ver Documentos
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="#" onclick="verHistorial({{ sol.id }})">
+                            <i class="bi bi-chat-dots me-2"></i>Historial
+                          </a>
+                        </li>
+                        {% if current_user.rol in ['Administrador','Director'] %}
+                        <li>
+                          <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                          <a class="dropdown-item text-danger" href="#" onclick="confirmarEliminacion({{ sol.id }}, '{{ sol.nombre }}')">
+                            <i class="bi bi-trash me-2"></i>Eliminar
+                          </a>
+                        </li>
+                        </li>
                         {% endif %}
-                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split" 
-                                data-bs-toggle="dropdown">
-                          <span class="visually-hidden">Más acciones</span>
-                        </button>
-                        <ul class="dropdown-menu">
-                          <li><a class="dropdown-item" href="#"><i class="bi bi-file-text me-2"></i>Ver Documentos</a></li>
-                          <li><a class="dropdown-item" href="#"><i class="bi bi-chat-dots me-2"></i>Historial</a></li>
-                          {% if current_user.rol in ['Administrador','Director'] %}
-                          <li><hr class="dropdown-divider"></li>
-                          <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i>Eliminar</a></li>
-                          {% endif %}
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
           {% else %}
-            <div class="text-center py-5">
-              <div class="display-1 text-muted mb-3">
-                <i class="bi bi-inbox"></i>
-              </div>
-              <h4 class="text-muted">No se encontraron solicitantes</h4>
-              <p class="text-muted">Intenta ajustar los filtros de búsqueda o agrega un nuevo solicitante.</p>
-              {% if current_user.rol in ['Administrador', 'Asistente'] %}
-              <a href="{{ url_for('solicitantes.create_solicitante') }}" class="btn btn-irsi-primary">
-                <i class="bi bi-person-plus me-2"></i>
-                Agregar Solicitante
-              </a>
-              {% endif %}
+          <div class="text-center py-5">
+            <div class="display-1 text-muted mb-3">
+              <i class="bi bi-inbox"></i>
             </div>
+            <h4 class="text-muted">No se encontraron solicitantes</h4>
+            <p class="text-muted">Intenta ajustar los filtros de búsqueda o agrega un nuevo solicitante.</p>
+            {% if current_user.rol in ['Administrador', 'Asistente'] %}
+            <a href="{{ url_for('solicitantes.create_solicitante') }}" class="btn btn-irsi-primary">
+              <i class="bi bi-person-plus me-2"></i>
+              Agregar Solicitante
+            </a>
+            {% endif %}
+          </div>
           {% endif %}
         </div>
       </div>
     </div>
   </div>
+<!-- Modal Ver Historial -->
+<div class="modal fade" id="modalHistorial" tabindex="-1" aria-labelledby="modalHistorialLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalHistorialLabel">
+                    <i class="bi bi-chat-dots me-2"></i>Historial de Estados
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 class="text-muted">Solicitante: <span id="nombreSolicitanteHistorial"></span></h6>
+                    <small class="text-muted">Estado Actual: <span id="estadoActual" class="badge bg-primary"></span></small>
+                </div>
+                <hr>
+                <div id="timelineHistorial">
+                    <!-- Timeline se carga aquí -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Documentos -->
+<div class="modal fade" id="modalDocumentos" tabindex="-1" aria-labelledby="modalDocumentosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalDocumentosLabel">
+                    <i class="bi bi-file-text me-2"></i>Documentos del Solicitante
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 class="text-muted">Solicitante: <span id="nombreSolicitante"></span></h6>
+                    <small class="text-muted">ID: <span id="idSolicitante"></span> | Documento: <span id="documentoSolicitante"></span></small>
+                </div>
+                <hr>
+                <div id="listaDocumentos">
+                    <!-- Documentos se cargan aquí -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Agregar después de la tabla, antes de la paginación -->
+<div class="row mt-3" id="accionesMultiples" style="display: none;">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span id="elementosSeleccionados" class="text-muted"></span>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-success btn-sm" onclick="cambiarEstadoMasivo('APROBADO')">
+                            <i class="bi bi-check-circle me-1"></i>Aprobar Seleccionados
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="cambiarEstadoMasivo('RECHAZADO')">
+                            <i class="bi bi-x-circle me-1"></i>Rechazar Seleccionados
+                        </button>
+                        {% if current_user.rol in ['Administrador', 'Director'] %}
+                        <button class="btn btn-outline-danger btn-sm" onclick="eliminarSeleccionados()">
+                            <i class="bi bi-trash me-1"></i>Eliminar Seleccionados
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
   <!-- Paginación -->
   {% if pagination.pages > 1 %}
@@ -348,209 +432,466 @@
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center">
         <div class="text-muted">
-          Mostrando {{ pagination.per_page * (pagination.page - 1) + 1 }} - 
-          {{ pagination.per_page * pagination.page if pagination.page < pagination.pages else pagination.total }} 
-          de {{ pagination.total }} resultados
-        </div>
-        
-        <nav aria-label="Navegación de páginas">
-          <ul class="pagination pagination-lg mb-0">
-            {% if pagination.has_prev %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ pagination.prev_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">
-                  <i class="bi bi-chevron-left"></i>
-                  Anterior
-                </a>
-              </li>
-            {% endif %}
-            
-            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-              {% if page_num %}
+          Mostrando {{ pagination.per_page * (pagination.page - 1) + 1 }} -
+          {{ pagination.per_page * pagination.page if pagination.page < pagination.pages else pagination.total }} de {{
+            pagination.total }} resultados </div>
+
+            <nav aria-label="Navegación de páginas">
+              <ul class="pagination pagination-lg mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                  <a class="page-link"
+                    href="?page={{ pagination.prev_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">
+                    <i class="bi bi-chevron-left"></i>
+                    Anterior
+                  </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
                 <li class="page-item {% if pagination.page == page_num %}active{% endif %}">
-                  <a class="page-link" href="?page={{ page_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">
+                  <a class="page-link"
+                    href="?page={{ page_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">
                     {{ page_num }}
                   </a>
                 </li>
-              {% else %}
+                {% else %}
                 <li class="page-item disabled">
                   <span class="page-link">...</span>
                 </li>
-              {% endif %}
-            {% endfor %}
-            
-            {% if pagination.has_next %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ pagination.next_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">
-                  Siguiente
-                  <i class="bi bi-chevron-right"></i>
-                </a>
-              </li>
-            {% endif %}
-          </ul>
-        </nav>
+                {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <li class="page-item">
+                  <a class="page-link"
+                    href="?page={{ pagination.next_num }}{% for k,v in filtros.items() if v %}&{{ k }}={{ v }}{% endfor %}">
+                    Siguiente
+                    <i class="bi bi-chevron-right"></i>
+                  </a>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+        </div>
       </div>
     </div>
+    {% endif %}
   </div>
-  {% endif %}
-</div>
 
-<style>
-/* Estilos adicionales específicos para solicitantes */
-.bg-gradient-primary {
-  background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary)) !important;
+  <style>
+    /* Estilos adicionales específicos para solicitantes */
+    .bg-gradient-primary {
+      background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary)) !important;
+    }
+
+    .avatar-circle {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .table> :not(caption)>*>* {
+      border-bottom-width: 1px;
+      border-color: rgba(0, 0, 0, .08);
+    }
+
+    .table-hover>tbody>tr:hover>* {
+      background-color: rgba(30, 58, 138, 0.02);
+    }
+
+    .badge {
+      font-weight: 500;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .btn-group .btn {
+      border-color: rgba(0, 0, 0, .125);
+    }
+
+    .card {
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--irsi-secondary);
+      box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    }
+
+    .pagination .page-link {
+      border-color: rgba(0, 0, 0, .125);
+      color: var(--irsi-primary);
+    }
+
+    .pagination .page-item.active .page-link {
+      background-color: var(--irsi-primary);
+      border-color: var(--irsi-primary);
+    }
+
+    .pagination .page-link:hover {
+      background-color: var(--irsi-light);
+      border-color: var(--irsi-secondary);
+      color: var(--irsi-secondary);
+    }
+
+    /* Animaciones suaves */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .avatar-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+      }
+
+      .display-6 {
+        font-size: 1.5rem;
+      }
+    }
+    /* Estilos para Timeline */
+.timeline {
+    position: relative;
+    padding-left: 30px;
 }
 
-.avatar-circle {
-  width: 45px;
-  height: 45px;
-  background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 1.1rem;
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
 }
 
-.table > :not(caption) > * > * {
-  border-bottom-width: 1px;
-  border-color: rgba(0,0,0,.08);
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
 }
 
-.table-hover > tbody > tr:hover > * {
-  background-color: rgba(30, 58, 138, 0.02);
+.timeline-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
-.badge {
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: white;
 }
 
-.btn-group .btn {
-  border-color: rgba(0,0,0,.125);
+.timeline-item-current .timeline-marker {
+    width: 18px;
+    height: 18px;
+    left: -24px;
+    font-size: 10px;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
 }
 
-.card {
-  transition: all 0.3s ease;
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #e9ecef;
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: var(--irsi-secondary);
-  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+.timeline-item-current .timeline-content {
+    border-left-color: var(--irsi-primary);
+    background: rgba(0,123,255,0.05);
 }
+  </style>
 
-.pagination .page-link {
-  border-color: rgba(0,0,0,.125);
-  color: var(--irsi-primary);
-}
-
-.pagination .page-item.active .page-link {
-  background-color: var(--irsi-primary);
-  border-color: var(--irsi-primary);
-}
-
-.pagination .page-link:hover {
-  background-color: var(--irsi-light);
-  border-color: var(--irsi-secondary);
-  color: var(--irsi-secondary);
-}
-
-/* Animaciones suaves */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.card {
-  animation: fadeInUp 0.5s ease-out;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .btn-group {
-    flex-direction: column;
-  }
-  
-  .avatar-circle {
-    width: 35px;
-    height: 35px;
-    font-size: 0.9rem;
-  }
-  
-  .display-6 {
-    font-size: 1.5rem;
-  }
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Inicializar tooltips
-  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Funcionalidad de seleccionar todos
-  const selectAllCheckbox = document.getElementById('selectAll');
-  const itemCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-  
-  if (selectAllCheckbox) {
-    selectAllCheckbox.addEventListener('change', function() {
-      itemCheckboxes.forEach(checkbox => {
-        checkbox.checked = this.checked;
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Inicializar tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
       });
-    });
-  }
 
-  // Actualizar estado del checkbox "seleccionar todos"
-  itemCheckboxes.forEach(checkbox => {
+      // Funcionalidad de seleccionar todos
+      const selectAllCheckbox = document.getElementById('selectAll');
+      const itemCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function () {
+          itemCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+          });
+        });
+      }
+
+      // Actualizar estado del checkbox "seleccionar todos"
+      // Modificar el event listener de los checkboxes
+itemCheckboxes.forEach(checkbox => {
     checkbox.addEventListener('change', function() {
-      const checkedCount = document.querySelectorAll('tbody input[type="checkbox"]:checked').length;
-      selectAllCheckbox.checked = checkedCount === itemCheckboxes.length;
-      selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < itemCheckboxes.length;
+        const checkedCount = document.querySelectorAll('tbody input[type="checkbox"]:checked').length;
+        selectAllCheckbox.checked = checkedCount === itemCheckboxes.length;
+        selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < itemCheckboxes.length;
+        
+        // Mostrar/ocultar acciones múltiples
+        const accionesDiv = document.getElementById('accionesMultiples');
+        const elementosSpan = document.getElementById('elementosSeleccionados');
+        
+        if (checkedCount > 0) {
+            accionesDiv.style.display = 'block';
+            elementosSpan.textContent = `${checkedCount} elemento(s) seleccionado(s)`;
+        } else {
+            accionesDiv.style.display = 'none';
+        }
     });
-  });
-
-  // Auto-submit del formulario de filtros al cambiar selects
-  const filterSelects = document.querySelectorAll('#filtrosForm select');
-  filterSelects.forEach(select => {
-    select.addEventListener('change', function() {
-      // Opcional: auto-submit después de un pequeño delay
-      // setTimeout(() => document.getElementById('filtrosForm').submit(), 300);
-    });
-  });
 });
 
-// Función para exportar datos (placeholder)
-function exportarDatos() {
-  // Aquí puedes implementar la lógica de exportación
-  alert('Funcionalidad de exportación en desarrollo');
+      // Auto-submit del formulario de filtros al cambiar selects
+      const filterSelects = document.querySelectorAll('#filtrosForm select');
+      filterSelects.forEach(select => {
+        select.addEventListener('change', function () {
+          // Opcional: auto-submit después de un pequeño delay
+          // setTimeout(() => document.getElementById('filtrosForm').submit(), 300);
+        });
+      });
+    });
+
+    // Función para exportar datos (placeholder)
+    function exportarDatos() {
+      // Obtener parámetros actuales de filtros
+      const params = new URLSearchParams(window.location.search);
+      const exportUrl = "{{ url_for('solicitantes.exportar_solicitantes') }}" + "?" + params.toString();
+      window.location.href = exportUrl;
+    }
+
+    // Función para validar formularios
+    function validarFormulario(form) {
+      const requiredFields = form.querySelectorAll('[required]');
+      let isValid = true;
+
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          field.classList.add('is-invalid');
+          isValid = false;
+        } else {
+          field.classList.remove('is-invalid');
+        }
+      });
+
+      return isValid;
+    }
+
+
+    // Agregar al final del script
+function confirmarEliminacion(id, nombre) {
+    if (confirm(`¿Estás seguro de que deseas eliminar al solicitante "${nombre}"? Esta acción no se puede deshacer.`)) {
+        // Crear un formulario para enviar POST
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/solicitantes/${id}/eliminar`;
+        
+        // Agregar token CSRF si lo usas
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken.content;
+            form.appendChild(csrfInput);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
 }
 
-// Función para validar formularios
-function validarFormulario(form) {
-  const requiredFields = form.querySelectorAll('[required]');
-  let isValid = true;
-  
-  requiredFields.forEach(field => {
-    if (!field.value.trim()) {
-      field.classList.add('is-invalid');
-      isValid = false;
-    } else {
-      field.classList.remove('is-invalid');
-    }
-  });
-  
-  return isValid;
+// Función para ver documentos en modal
+function verDocumentos(solicitanteId) {
+    fetch(`/solicitantes/${solicitanteId}/documentos/ajax`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Llenar información del solicitante
+                document.getElementById('nombreSolicitante').textContent = data.solicitante.nombre;
+                document.getElementById('idSolicitante').textContent = data.solicitante.id;
+                document.getElementById('documentoSolicitante').textContent = data.solicitante.documento;
+                
+                // Llenar lista de documentos
+                const listaDocumentos = document.getElementById('listaDocumentos');
+                if (data.documentos.length === 0) {
+                    listaDocumentos.innerHTML = `
+                        <div class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                                <p>No hay documentos subidos</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let documentosHtml = '<div class="list-group">';
+                    data.documentos.forEach(doc => {
+                        const icono = obtenerIconoArchivo(doc);
+                        documentosHtml += `
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-${icono} me-3 text-primary"></i>
+                                    <div>
+                                        <h6 class="mb-0">${doc}</h6>
+                                        <small class="text-muted">Documento adjunto</small>
+                                    </div>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="descargarDocumento(${solicitanteId}, '${doc}')">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="previsualizarDocumento(${solicitanteId}, '${doc}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    documentosHtml += '</div>';
+                    listaDocumentos.innerHTML = documentosHtml;
+                }
+                
+                // Mostrar modal
+                new bootstrap.Modal(document.getElementById('modalDocumentos')).show();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los documentos');
+        });
 }
-</script>
-{% endblock %}
+
+// Función para ver historial en modal
+function verHistorial(solicitanteId) {
+    fetch(`/solicitantes/${solicitanteId}/historial/ajax`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Llenar información del solicitante
+                document.getElementById('nombreSolicitanteHistorial').textContent = data.solicitante.nombre;
+                document.getElementById('estadoActual').textContent = data.solicitante.estado_actual;
+                
+                // Crear timeline
+                const timeline = document.getElementById('timelineHistorial');
+                if (data.historial.length === 0) {
+                    timeline.innerHTML = `
+                        <div class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="bi bi-clock-history display-4 d-block mb-2"></i>
+                                <p>No hay historial de cambios registrado</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let timelineHtml = '<div class="timeline">';
+                    data.historial.forEach((item, index) => {
+                        const estadoClass = obtenerClaseEstado(item.estado_nuevo);
+                        timelineHtml += `
+                            <div class="timeline-item ${index === 0 ? 'timeline-item-current' : ''}">
+                                <div class="timeline-marker bg-${estadoClass}">
+                                    <i class="bi bi-circle-fill"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <h6 class="mb-1">
+                                            <span class="text-${estadoClass}">${item.estado_nuevo}</span>
+                                        </h6>
+                                        <small class="text-muted">${item.fecha_cambio}</small>
+                                    </div>
+                                    <p class="text-muted mb-1">Por: ${item.usuario}</p>
+                                    ${item.comentario ? `<p class="mb-0"><small>${item.comentario}</small></p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    timelineHtml += '</div>';
+                    timeline.innerHTML = timelineHtml;
+                }
+                
+                // Mostrar modal
+                new bootstrap.Modal(document.getElementById('modalHistorial')).show();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar el historial');
+        });
+}
+
+// Función auxiliar para obtener icono de archivo
+function obtenerIconoArchivo(nombreArchivo) {
+    const extension = nombreArchivo.split('.').pop().toLowerCase();
+    switch(extension) {
+        case 'pdf': return 'file-pdf';
+        case 'doc':
+        case 'docx': return 'file-word';
+        case 'xls':
+        case 'xlsx': return 'file-excel';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif': return 'file-image';
+        default: return 'file-text';
+    }
+}
+
+// Función auxiliar para obtener clase CSS del estado
+function obtenerClaseEstado(estado) {
+    switch(estado.toUpperCase()) {
+        case 'REGISTRADO': return 'info';
+        case 'EN_REVISION': return 'warning';
+        case 'APROBADO': return 'success';
+        case 'RECHAZADO': return 'danger';
+        case 'CONVERTIDO': return 'success';
+        default: return 'secondary';
+    }
+}
+
+// Función para descargar documento (placeholder)
+function descargarDocumento(solicitanteId, documento) {
+    window.open(`/solicitantes/${solicitanteId}/documentos/${documento}/descargar`, '_blank');
+}
+
+// Función para previsualizar documento (placeholder)
+function previsualizarDocumento(solicitanteId, documento) {
+    window.open(`/solicitantes/${solicitanteId}/documentos/${documento}/preview`, '_blank');
+}
+  </script>
+  {% endblock %}

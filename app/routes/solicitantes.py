@@ -29,18 +29,23 @@ def list_solicitantes():
         'pais': request.args.get('pais', '')
     }
 
-    # Instanciamos el formulario aquí para poder usar sus .choices en la plantilla
     form = SolicitanteForm()
-
-    # Obtenemos la paginación pasando filtros, página y elementos por página
     pagination = Solicitante.buscar_avanzado(filtros, page=page, per_page=10)
+    
+    # AGREGAR ESTAS LÍNEAS PARA LAS ESTADÍSTICAS:
+    estadisticas = {
+        'en_revision': Solicitante.query.filter_by(estado=EstadoSolicitud.EN_REVISION).count(),
+        'aprobados': Solicitante.query.filter_by(estado=EstadoSolicitud.APROBADO).count(),
+        'rechazados': Solicitante.query.filter_by(estado=EstadoSolicitud.RECHAZADO).count(),
+        'registrados': Solicitante.query.filter_by(estado=EstadoSolicitud.REGISTRADO).count()
+    }
 
-    # Enviamos 'form' al render_template
     return render_template(
         'solicitantes/list.html',
         pagination=pagination,
         filtros=filtros,
-        form=form
+        form=form,
+        estadisticas=estadisticas  # AGREGAR ESTA LÍNEA
     )
 
 @solicitantes_bp.route('/create', methods=['GET', 'POST'])
@@ -235,3 +240,215 @@ def compare_solicitante(solicitante_id):
         app1=app1,
         app2=app2
     )
+
+
+@solicitantes_bp.route('/exportar', methods=['GET'])
+@login_required
+@require_role('Administrador', 'Director', 'Asistente')
+def exportar_solicitantes():
+    import csv
+    from flask import Response
+    from io import StringIO
+    
+    # Obtener filtros de la URL
+    filtros = {
+        'nombre': request.args.get('nombre', ''),
+        'programa': request.args.get('programa', ''),
+        'estado': request.args.get('estado', ''),
+        'pais': request.args.get('pais', '')
+    }
+    
+    # Obtener todos los resultados (sin paginación)
+    query = Solicitante.query
+    if filtros.get('nombre'):
+        query = query.filter(Solicitante.nombre.ilike(f"%{filtros['nombre']}%"))
+    if filtros.get('programa'):
+        query = query.filter(Solicitante.programa_solicitado == filtros['programa'])
+    if filtros.get('estado'):
+        try:
+            estado_enum = EstadoSolicitud[filtros['estado']]
+            query = query.filter(Solicitante.estado == estado_enum)
+        except KeyError:
+            pass
+    if filtros.get('pais'):
+        query = query.filter(Solicitante.pais == filtros['pais'])
+    
+    solicitantes = query.order_by(Solicitante.fecha_registro.desc()).all()
+    
+    # Crear CSV
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Encabezados
+    writer.writerow([
+        'ID', 'Nombre', 'Documento', 'Email', 'Teléfono', 'País', 
+        'Programa', 'Estado', 'Fecha Registro'
+    ])
+    
+    # Datos
+    for sol in solicitantes:
+        writer.writerow([
+            sol.id,
+            sol.nombre,
+            sol.documento,
+            sol.emails,
+            sol.telefonos,
+            sol.pais.value if sol.pais else '',
+            sol.programa_legible,
+            sol.estado_legible,
+            sol.fecha_registro.strftime('%d/%m/%Y %H:%M')
+        ])
+    
+    output.seek(0)
+    
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={"Content-Disposition": "attachment;filename=solicitantes.csv"}
+    )
+
+@solicitantes_bp.route('/<int:solicitante_id>/documentos')
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def ver_documentos(solicitante_id):
+    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    documentos = solicitante.listar_documentos()
+    
+    return render_template(
+        'solicitantes/documentos.html',
+        solicitante=solicitante,
+        documentos=documentos
+    )
+
+
+@solicitantes_bp.route('/<int:solicitante_id>/historial')
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def ver_historial(solicitante_id):
+    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    # Necesitarás descomentar la relación en el modelo
+    historial = HistorialEstado.query.filter_by(solicitante_id=solicitante_id)\
+                                   .order_by(HistorialEstado.fecha_cambio.desc()).all()
+    
+    return render_template(
+        'solicitantes/historial.html',
+        solicitante=solicitante,
+        historial=historial
+    )
+
+
+@solicitantes_bp.route('/<int:solicitante_id>/eliminar', methods=['POST'])
+@login_required
+@require_role('Administrador', 'Director')
+def eliminar_solicitante(solicitante_id):
+    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    
+    try:
+        # Eliminar archivos asociados si existen
+        upload_folder = current_app.config.get('UPLOAD_FOLDER_SOLICITANTES')
+        if upload_folder:
+            import shutil
+            carpeta = os.path.join(upload_folder, str(solicitante.id))
+            if os.path.exists(carpeta):
+                shutil.rmtree(carpeta)
+        
+        db.session.delete(solicitante)
+        db.session.commit()
+        flash('Solicitante eliminado exitosamente', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('Error al eliminar el solicitante', 'error')
+        current_app.logger.error(f"Error eliminando solicitante {solicitante_id}: {e}")
+    
+    return redirect(url_for('solicitantes.list_solicitantes'))
+
+
+@solicitantes_bp.route('/<int:solicitante_id>/documentos/<filename>/descargar')
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def descargar_documento(solicitante_id, filename):
+    from flask import send_file
+    
+    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    upload_folder = current_app.config.get('UPLOAD_FOLDER_SOLICITANTES')
+    
+    if not upload_folder:
+        flash('Configuración de archivos no disponible', 'error')
+        return redirect(url_for('solicitantes.list_solicitantes'))
+    
+    archivo_path = os.path.join(upload_folder, str(solicitante.id), secure_filename(filename))
+    
+    if not os.path.exists(archivo_path):
+        flash('Archivo no encontrado', 'error')
+        return redirect(url_for('solicitantes.list_solicitantes'))
+    
+    return send_file(archivo_path, as_attachment=True)
+
+@solicitantes_bp.route('/<int:solicitante_id>/documentos/<filename>/preview')
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def preview_documento(solicitante_id, filename):
+    from flask import send_file
+    
+    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    upload_folder = current_app.config.get('UPLOAD_FOLDER_SOLICITANTES')
+    
+    if not upload_folder:
+        flash('Configuración de archivos no disponible', 'error')
+        return redirect(url_for('solicitantes.list_solicitantes'))
+    
+    archivo_path = os.path.join(upload_folder, str(solicitante.id), secure_filename(filename))
+    
+    if not os.path.exists(archivo_path):
+        flash('Archivo no encontrado', 'error')
+        return redirect(url_for('solicitantes.list_solicitantes'))
+    
+    return send_file(archivo_path, as_attachment=False)
+
+
+@solicitantes_bp.route('/<int:solicitante_id>/historial/ajax')
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def obtener_historial_ajax(solicitante_id):
+    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    # Necesitarás descomentar la relación en el modelo
+    historial = HistorialEstado.query.filter_by(solicitante_id=solicitante_id)\
+                                   .order_by(HistorialEstado.fecha.desc()).all()
+    
+    historial_data = []
+    for h in historial:
+        historial_data.append({
+            'estado_nuevo': h.estado.value,
+            'fecha_cambio': h.fecha.strftime('%d/%m/%Y %H:%M'),
+            'usuario': h.usuario.nombre if h.usuario else 'Sistema',
+            'comentario': h.comentario or ''
+        })
+    
+    return jsonify({
+        'success': True,
+        'solicitante': {
+            'id': solicitante.id,
+            'nombre': solicitante.nombre,
+            'estado_actual': solicitante.estado_legible
+        },
+        'historial': historial_data
+    })
+
+
+@solicitantes_bp.route('/<int:solicitante_id>/documentos/ajax')
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def obtener_documentos_ajax(solicitante_id):
+    solicitante = Solicitante.query.get_or_404(solicitante_id)
+    documentos = solicitante.listar_documentos()
+    
+    return jsonify({
+        'success': True,
+        'solicitante': {
+            'id': solicitante.id,
+            'nombre': solicitante.nombre,
+            'documento': solicitante.documento
+        },
+        'documentos': documentos
+    })

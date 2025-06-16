@@ -1,70 +1,780 @@
 {% extends 'base.html' %}
-{% block title %}Comparar Aplicaciones{% endblock %}
-{% block content %}
-<div class="container mt-4">
-  <h2>Comparación de Aplicaciones</h2>
 
-  <!-- Formulario para elegir las dos aplicaciones -->
-  <form method="post" class="row g-3 mb-4">
-    <div class="col-md-5">
-      <label for="app1" class="form-label">Aplicación 1</label>
-      <select id="app1" name="app1" class="form-select">
-        {% for s in aplicaciones %}
-          <option value="{{ s.id }}" {% if s.id == app1.id %}selected{% endif %}>
-            {{ s.fecha_registro.strftime('%Y-%m-%d') }} &mdash; {{ s.programa_legible }}
-          </option>
-        {% endfor %}
-      </select>
+{% block title %}Comparar Aplicaciones - IRSI Becas{% endblock %}
+
+{% block head %}
+<style>
+  .comparison-header {
+    background: linear-gradient(135deg, var(--irsi-primary) 0%, var(--irsi-secondary) 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 20px;
+  }
+
+  .comparison-form {
+    background: var(--irsi-white);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+  }
+
+  .comparison-card {
+    background: var(--irsi-white);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .comparison-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .application-header {
+    background: linear-gradient(135deg, var(--irsi-accent) 0%, var(--irsi-secondary) 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .application-header h4 {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .application-header .badge {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 0.8rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    margin-top: 0.5rem;
+  }
+
+  .info-section {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    color: var(--irsi-primary);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid var(--irsi-light);
+    padding-bottom: 0.5rem;
+  }
+
+  .section-title i {
+    margin-right: 0.5rem;
+    color: var(--irsi-accent);
+    font-size: 1.2rem;
+  }
+
+  .info-item {
+    background: var(--irsi-light);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-left: 4px solid var(--irsi-accent);
+    transition: all 0.3s ease;
+  }
+
+  .info-item:hover {
+    background: #e2e8f0;
+    transform: translateX(5px);
+  }
+
+  .info-label {
+    font-weight: 600;
+    color: var(--irsi-primary);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+  }
+
+  .info-value {
+    color: var(--irsi-gray);
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .comparison-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+
+  .comparison-arrow i {
+    font-size: 3rem;
+    color: var(--irsi-accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .select-enhanced {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .select-enhanced:focus {
+    border-color: var(--irsi-accent);
+    box-shadow: 0 0 0 0.2rem rgba(6, 182, 212, 0.25);
+  }
+
+  .btn-compare {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    border: none;
+    color: white;
+    border-radius: 15px;
+    padding: 1rem 2rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
+  }
+
+  .btn-compare:hover {
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    color: white;
+  }
+
+  .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+  }
+
+  .status-en-revision {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .status-aprobado {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  .status-rechazado {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+
+  .status-pendiente {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .text-area-content {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    border-left: 4px solid var(--irsi-accent);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .comparison-stats {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .stat-item {
+    display: inline-block;
+    margin: 0 1rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--irsi-primary);
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--irsi-gray);
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 768px) {
+    .comparison-arrow {
+      min-height: 50px;
+      transform: rotate(90deg);
+    }
+    
+    .comparison-card {
+      margin-bottom: 1rem;
+    }
+    
+    .comparison-form {
+      padding: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="comparison-header text-center">
+    <div class="container">
+      <h1 class="mb-3">
+        <i class="bi bi-arrow-left-right me-3"></i>
+        Comparación de Aplicaciones
+      </h1>
+      <p class="mb-0 fs-5">Analiza y compara las diferentes aplicaciones de solicitantes para una evaluación detallada</p>
     </div>
-    <div class="col-md-2 text-center align-self-end">
-      <button type="submit" class="btn btn-primary">Comparar →</button>
-    </div>
-    <div class="col-md-5">
-      <label for="app2" class="form-label">Aplicación 2</label>
-      <select id="app2" name="app2" class="form-select">
-        <option value="">-- Selecciona segunda aplicación --</option>
-        {% for s in aplicaciones %}
-          {% if s.id != app1.id %}
-            <option value="{{ s.id }}" {% if app2 and s.id == app2.id %}selected{% endif %}>
-              {{ s.fecha_registro.strftime('%Y-%m-%d') }} &mdash; {{ s.programa_legible }}
-            </option>
-          {% endif %}
-        {% endfor %}
-      </select>
-    </div>
-  </form>
+  </div>
+
+  <!-- Formulario de selección -->
+  <div class="comparison-form">
+    <form method="post">
+      <div class="row align-items-end g-4">
+        <!-- Aplicación 1 -->
+        <div class="col-lg-4 col-md-5">
+          <label for="app1" class="form-label fw-bold text-primary">
+            <i class="bi bi-1-circle me-2"></i>
+            Primera Aplicación
+          </label>
+          <select id="app1" name="app1" class="form-select select-enhanced" required>
+            {% for s in aplicaciones %}
+              <option value="{{ s.id }}" {% if s.id == app1.id %}selected{% endif %}>
+                {{ s.nombre }} - {{ s.fecha_registro.strftime('%d/%m/%Y') }} ({{ s.programa_legible }})
+              </option>
+            {% endfor %}
+          </select>
+          <small class="text-muted">Selecciona la primera aplicación a comparar</small>
+        </div>
+
+        <!-- Botón comparar -->
+        <div class="col-lg-4 col-md-2 text-center">
+          <button type="submit" class="btn btn-compare w-100">
+            <i class="bi bi-arrow-left-right me-2"></i>
+            Comparar
+          </button>
+        </div>
+
+        <!-- Aplicación 2 -->
+        <div class="col-lg-4 col-md-5">
+          <label for="app2" class="form-label fw-bold text-primary">
+            <i class="bi bi-2-circle me-2"></i>
+            Segunda Aplicación
+          </label>
+          <select id="app2" name="app2" class="form-select select-enhanced" required>
+            <option value="">-- Selecciona segunda aplicación --</option>
+            {% for s in aplicaciones %}
+              {% if s.id != app1.id %}
+                <option value="{{ s.id }}" {% if app2 and s.id == app2.id %}selected{% endif %}>
+                  {{ s.nombre }} - {{ s.fecha_registro.strftime('%d/%m/%Y') }} ({{ s.programa_legible }})
+                </option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <small class="text-muted">Selecciona la segunda aplicación a comparar</small>
+        </div>
+      </div>
+    </form>
+  </div>
 
   {% if app2 %}
-  <!-- Mostrar comparación sólo si hay dos aplicaciones seleccionadas -->
+  <!-- Estadísticas de comparación -->
+  <div class="comparison-stats">
+    <div class="row text-center">
+      <div class="col-md-3">
+        <div class="stat-item">
+          <div class="stat-value">2</div>
+          <div class="stat-label">Aplicaciones</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-item">
+          <div class="stat-value">{{ ((app2.fecha_registro - app1.fecha_registro).days)|abs }}</div>
+          <div class="stat-label">Días de diferencia</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-item">
+          <div class="stat-value">{% if app1.programa_solicitado == app2.programa_solicitado %}✓{% else %}✗{% endif %}</div>
+          <div class="stat-label">Mismo programa</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-item">
+          <div class="stat-value">{% if app1.estado == app2.estado %}✓{% else %}✗{% endif %}</div>
+          <div class="stat-label">Mismo estado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparación de aplicaciones -->
   <div class="row">
-    <div class="col-md-5">
-      <h5>Aplicación 1</h5>
-      <ul class="list-group">
-        <li class="list-group-item"><strong>Nombre:</strong> {{ app1.nombre }}</li>
-        <li class="list-group-item"><strong>Email:</strong> {{ app1.emails }}</li>
-        <li class="list-group-item"><strong>Documento:</strong> {{ app1.documento }}</li>
-        <li class="list-group-item"><strong>Programa:</strong> {{ app1.programa_legible }}</li>
-        <li class="list-group-item"><strong>Motivación:</strong> <pre>{{ app1.motivacion }}</pre></li>
-        <!-- Más campos según modelo -->
-      </ul>
+    <!-- Aplicación 1 -->
+    <div class="col-lg-5 col-md-12 mb-4">
+      <div class="comparison-card">
+        <div class="application-header">
+          <h4>
+            <i class="bi bi-person-badge me-2"></i>
+            Aplicación #1
+          </h4>
+          <span class="badge status-{{ app1.estado.name.lower().replace('_', '-') }}">
+            {{ app1.estado_legible }}
+          </span>
+        </div>
+
+        <!-- Información Personal -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-person"></i>
+            Información Personal
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Nombre Completo</div>
+            <div class="info-value">{{ app1.nombre }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Documento de Identidad</div>
+            <div class="info-value">{{ app1.documento }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Correo Electrónico</div>
+            <div class="info-value">{{ app1.emails }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Teléfonos</div>
+            <div class="info-value">{{ app1.telefonos or 'No especificado' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">País - Ciudad</div>
+            <div class="info-value">{{ app1.pais.name }} - {{ app1.ciudad }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Fecha de Nacimiento</div>
+            <div class="info-value">{{ app1.fecha_nacimiento.strftime('%d/%m/%Y') if app1.fecha_nacimiento else 'No especificada' }}</div>
+          </div>
+        </div>
+
+        <!-- Información Académica -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-mortarboard"></i>
+            Información Académica
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Nivel Educativo</div>
+            <div class="info-value">{{ app1.nivel_educativo }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Institución</div>
+            <div class="info-value">{{ app1.institucion }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Promedio Académico</div>
+            <div class="info-value">{{ app1.promedio or 'No especificado' }}</div>
+          </div>
+          
+          {% if app1.experiencia_tech %}
+          <div class="info-item">
+            <div class="info-label">Experiencia Tecnológica</div>
+            <div class="info-value">
+              <div class="text-area-content">{{ app1.experiencia_tech }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Información del Programa -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-code-square"></i>
+            Programa Solicitado
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Programa</div>
+            <div class="info-value">{{ app1.programa_legible }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Modalidad</div>
+            <div class="info-value">{{ app1.modalidad.name.replace('_', ' ').title() }}</div>
+          </div>
+          
+          {% if app1.disponibilidad %}
+          <div class="info-item">
+            <div class="info-label">Disponibilidad</div>
+            <div class="info-value">{{ app1.disponibilidad }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Motivación y Objetivos -->
+        {% if app1.motivacion %}
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-heart"></i>
+            Motivación
+          </div>
+          <div class="info-item">
+            <div class="info-value">
+              <div class="text-area-content">{{ app1.motivacion }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if app1.objetivos %}
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-target"></i>
+            Objetivos
+          </div>
+          <div class="info-item">
+            <div class="info-value">
+              <div class="text-area-content">{{ app1.objetivos }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Información Socioeconómica -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-graph-up"></i>
+            Información Socioeconómica
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Situación Laboral</div>
+            <div class="info-value">{{ app1.situacion_laboral or 'No especificada' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Ingresos</div>
+            <div class="info-value">{{ app1.ingresos or 'No especificados' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Acceso a Tecnología</div>
+            <div class="info-value">{{ app1.acceso_tecnologia or 'No especificado' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Dependientes</div>
+            <div class="info-value">{{ app1.dependientes or 'No especificado' }}</div>
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-calendar"></i>
+            Control de Fechas
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Fecha de Registro</div>
+            <div class="info-value">{{ app1.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</div>
+          </div>
+          
+          {% if app1.fecha_actualizacion %}
+          <div class="info-item">
+            <div class="info-label">Última Actualización</div>
+            <div class="info-value">{{ app1.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
-    <div class="col-md-2 text-center">
-      <i class="bi bi-arrow-right fs-1 my-4"></i>
+    <!-- Flecha central -->
+    <div class="col-lg-2 col-md-12">
+      <div class="comparison-arrow">
+        <i class="bi bi-arrow-left-right"></i>
+      </div>
     </div>
 
-    <div class="col-md-5">
-      <h5>Aplicación 2</h5>
-      <ul class="list-group">
-        <li class="list-group-item"><strong>Nombre:</strong> {{ app2.nombre }}</li>
-        <li class="list-group-item"><strong>Email:</strong> {{ app2.emails }}</li>
-        <li class="list-group-item"><strong>Documento:</strong> {{ app2.documento }}</li>
-        <li class="list-group-item"><strong>Programa:</strong> {{ app2.programa_legible }}</li>
-        <li class="list-group-item"><strong>Motivación:</strong> <pre>{{ app2.motivacion }}</pre></li>
-        <!-- Más campos según modelo -->
-      </ul>
+    <!-- Aplicación 2 -->
+    <div class="col-lg-5 col-md-12 mb-4">
+      <div class="comparison-card">
+        <div class="application-header">
+          <h4>
+            <i class="bi bi-person-badge me-2"></i>
+            Aplicación #2
+          </h4>
+          <span class="badge status-{{ app2.estado.name.lower().replace('_', '-') }}">
+            {{ app2.estado_legible }}
+          </span>
+        </div>
+
+        <!-- Información Personal -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-person"></i>
+            Información Personal
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Nombre Completo</div>
+            <div class="info-value">{{ app2.nombre }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Documento de Identidad</div>
+            <div class="info-value">{{ app2.documento }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Correo Electrónico</div>
+            <div class="info-value">{{ app2.emails }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Teléfonos</div>
+            <div class="info-value">{{ app2.telefonos or 'No especificado' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">País - Ciudad</div>
+            <div class="info-value">{{ app2.pais.name }} - {{ app2.ciudad }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Fecha de Nacimiento</div>
+            <div class="info-value">{{ app2.fecha_nacimiento.strftime('%d/%m/%Y') if app2.fecha_nacimiento else 'No especificada' }}</div>
+          </div>
+        </div>
+
+        <!-- Información Académica -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-mortarboard"></i>
+            Información Académica
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Nivel Educativo</div>
+            <div class="info-value">{{ app2.nivel_educativo }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Institución</div>
+            <div class="info-value">{{ app2.institucion }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Promedio Académico</div>
+            <div class="info-value">{{ app2.promedio or 'No especificado' }}</div>
+          </div>
+          
+          {% if app2.experiencia_tech %}
+          <div class="info-item">
+            <div class="info-label">Experiencia Tecnológica</div>
+            <div class="info-value">
+              <div class="text-area-content">{{ app2.experiencia_tech }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Información del Programa -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-code-square"></i>
+            Programa Solicitado
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Programa</div>
+            <div class="info-value">{{ app2.programa_legible }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Modalidad</div>
+            <div class="info-value">{{ app2.modalidad.name.replace('_', ' ').title() }}</div>
+          </div>
+          
+          {% if app2.disponibilidad %}
+          <div class="info-item">
+            <div class="info-label">Disponibilidad</div>
+            <div class="info-value">{{ app2.disponibilidad }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Motivación y Objetivos -->
+        {% if app2.motivacion %}
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-heart"></i>
+            Motivación
+          </div>
+          <div class="info-item">
+            <div class="info-value">
+              <div class="text-area-content">{{ app2.motivacion }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if app2.objetivos %}
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-target"></i>
+            Objetivos
+          </div>
+          <div class="info-item">
+            <div class="info-value">
+              <div class="text-area-content">{{ app2.objetivos }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Información Socioeconómica -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-graph-up"></i>
+            Información Socioeconómica
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Situación Laboral</div>
+            <div class="info-value">{{ app2.situacion_laboral or 'No especificada' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Ingresos</div>
+            <div class="info-value">{{ app2.ingresos or 'No especificados' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Acceso a Tecnología</div>
+            <div class="info-value">{{ app2.acceso_tecnologia or 'No especificado' }}</div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Dependientes</div>
+            <div class="info-value">{{ app2.dependientes or 'No especificado' }}</div>
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="info-section">
+          <div class="section-title">
+            <i class="bi bi-calendar"></i>
+            Control de Fechas
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Fecha de Registro</div>
+            <div class="info-value">{{ app2.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</div>
+          </div>
+          
+          {% if app2.fecha_actualizacion %}
+          <div class="info-item">
+            <div class="info-label">Última Actualización</div>
+            <div class="info-value">{{ app2.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Botones de acción adicionales -->
+  <div class="text-center mt-4">
+    <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-outline-primary me-3">
+      <i class="bi bi-arrow-left me-2"></i>
+      Volver al Listado
+    </a>
+    <button class="btn btn-irsi-primary" onclick="window.print()">
+      <i class="bi bi-printer me-2"></i>
+      Imprimir Comparación
+    </button>
   </div>
   {% endif %}
 </div>
+
+{% block scripts %}
+<script>
+// Validación del formulario
+document.querySelector('form').addEventListener('submit', function(e) {
+  const app1 = document.getElementById('app1').value;
+  const app2 = document.getElementById('app2').value;
+  
+  if (!app1 || !app2) {
+    e.preventDefault();
+    alert('Por favor selecciona ambas aplicaciones para comparar.');
+    return false;
+  }
+  
+  if (app1 === app2) {
+    e.preventDefault();
+    alert('No puedes comparar la misma aplicación. Selecciona dos aplicaciones diferentes.');
+    return false;
+  }
+});
+
+// Cambio dinámico en el select de aplicación 1
+document.getElementById('app1').addEventListener('change', function() {
+  const selectedValue = this.value;
+  const app2Select = document.getElementById('app2');
+  
+  // Rehabilitar todas las opciones
+  Array.from(app2Select.options).forEach(option => {
+    option.disabled = false;
+  });
+  
+  // Deshabilitar la opción seleccionada en app1
+  Array.from(app2Select.options).forEach(option => {
+    if (option.value === selectedValue) {
+      option.disabled = true;
+    }
+  });
+  
+  // Si app2 tiene seleccionada la misma que app1, resetear
+  if (app2Select.value === selectedValue) {
+    app2Select.value = '';
+  }
+});
+</script>
+{% endblock %}
 {% endblock %}
