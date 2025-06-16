@@ -2,43 +2,609 @@
 {% block title %}Solicitantes Aprobados{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h1>Solicitantes Aprobados</h1>
+<div class="container-fluid py-4">
+  <!-- Header Section -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="mb-1" style="color: var(--irsi-primary); font-weight: 700;">
+            <i class="bi bi-person-check me-3" style="color: var(--irsi-accent);"></i>
+            Solicitantes Aprobados
+          </h1>
+          <p class="text-muted mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            Gestiona y convierte solicitantes aprobados en becados activos
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary" onclick="exportToExcel()">
+            <i class="bi bi-file-earmark-excel me-2"></i>
+            Exportar Excel
+          </button>
+          <button class="btn btn-irsi-primary" data-bs-toggle="modal" data-bs-target="#bulkConvertModal">
+            <i class="bi bi-people-fill me-2"></i>
+            Conversión Masiva
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100" style="border-left: 4px solid var(--irsi-primary);">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-person-check" style="color: white; font-size: 1.5rem;"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <div class="text-muted small">Total Aprobados</div>
+              <div class="fw-bold" style="font-size: 1.5rem; color: var(--irsi-primary);">
+                {{ aprobados|length }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100" style="border-left: 4px solid var(--irsi-accent);">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--irsi-accent), #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-mortarboard" style="color: white; font-size: 1.5rem;"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <div class="text-muted small">Pendientes Conversión</div>
+              <div class="fw-bold" style="font-size: 1.5rem; color: var(--irsi-accent);">
+                {{ aprobados|selectattr('beca', 'none')|list|length }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100" style="border-left: 4px solid #28a745;">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-check-circle" style="color: white; font-size: 1.5rem;"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <div class="text-muted small">Ya Convertidos</div>
+              <div class="fw-bold" style="font-size: 1.5rem; color: #28a745;">
+                {{ aprobados|selectattr('beca')|list|length }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card h-100" style="border-left: 4px solid var(--irsi-secondary);">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent)); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-calendar-week" style="color: white; font-size: 1.5rem;"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <div class="text-muted small">Este Mes</div>
+              <div class="fw-bold" style="font-size: 1.5rem; color: var(--irsi-secondary);">
+                {{ aprobados|selectattr('fecha_registro')|selectattr('fecha_registro', 'ge', (moment().startOf('month')))|list|length if moment else 0 }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">
+                <i class="bi bi-search me-1"></i>
+                Buscar solicitante
+              </label>
+              <input type="text" class="form-control" id="searchInput" placeholder="Nombre, email o documento...">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">
+                <i class="bi bi-filter me-1"></i>
+                Programa
+              </label>
+              <select class="form-select" id="programFilter">
+                <option value="">Todos los programas</option>
+                <option value="data_science">Data Science</option>
+                <option value="web_development">Desarrollo Web</option>
+                <option value="mobile_development">Desarrollo Móvil</option>
+                <option value="devops">DevOps</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">
+                <i class="bi bi-calendar me-1"></i>
+                Fecha de registro
+              </label>
+              <input type="date" class="form-control" id="dateFilter">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">
+                <i class="bi bi-funnel me-1"></i>
+                Estado
+              </label>
+              <select class="form-select" id="statusFilter">
+                <option value="">Todos</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="convertido">Convertido</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
   {% if aprobados %}
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Email</th>
-          <th>Programa</th>
-          <th>Fecha de Registro</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for s in aprobados %}
-        <tr>
-          <td>{{ s.id }}</td>
-          <td>{{ s.nombre }}</td>
-          <td>{{ s.emails }}</td>
-          <td>{{ s.programa_solicitado.name.replace('_',' ').title() }}</td>
-          <td>{{ s.fecha_registro.strftime('%Y-%m-%d') }}</td>
-          <td>
-            <form method="post"
-                  action="{{ url_for('becados.convert_solicitante', solicitante_id=s.id) }}"
-                  style="display:inline">
-              <button type="submit" class="btn btn-success btn-sm">
-                Convertir a Becado
-              </button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--irsi-light), #e2e8f0); border-bottom: 2px solid var(--irsi-primary);">
+        <h5 class="mb-0" style="color: var(--irsi-primary);">
+          <i class="bi bi-list-check me-2"></i>
+          Lista de Solicitantes Aprobados
+        </h5>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-secondary" onclick="selectAll()">
+            <i class="bi bi-check-all me-1"></i>
+            Seleccionar Todo
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+            <i class="bi bi-x-circle me-1"></i>
+            Limpiar Selección
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="solicitantesTable">
+            <thead style="background: var(--irsi-light); border-bottom: 2px solid var(--irsi-primary);">
+              <tr>
+                <th class="text-center" style="width: 50px;">
+                  <input type="checkbox" class="form-check-input" id="selectAllCheckbox">
+                </th>
+                <th style="color: var(--irsi-primary);">
+                  <i class="bi bi-person me-1"></i>
+                  Solicitante
+                </th>
+                <th style="color: var(--irsi-primary);">
+                  <i class="bi bi-envelope me-1"></i>
+                  Contacto
+                </th>
+                <th style="color: var(--irsi-primary);">
+                  <i class="bi bi-mortarboard me-1"></i>
+                  Programa
+                </th>
+                <th style="color: var(--irsi-primary);">
+                  <i class="bi bi-calendar me-1"></i>
+                  Registro
+                </th>
+                <th style="color: var(--irsi-primary);">
+                  <i class="bi bi-graph-up me-1"></i>
+                  Promedio
+                </th>
+                <th style="color: var(--irsi-primary);">
+                  <i class="bi bi-check-circle me-1"></i>
+                  Estado
+                </th>
+                <th class="text-center" style="color: var(--irsi-primary);">
+                  <i class="bi bi-gear me-1"></i>
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in aprobados %}
+              <tr class="solicitante-row" data-programa="{{ s.programa_solicitado.value }}" data-fecha="{{ s.fecha_registro.strftime('%Y-%m-%d') }}" data-status="{% if s.beca %}convertido{% else %}pendiente{% endif %}">
+                <td class="text-center">
+                  <input type="checkbox" class="form-check-input solicitante-checkbox" value="{{ s.id }}" {% if s.beca %}disabled{% endif %}>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-circle me-3" style="width: 45px; height: 45px; background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                      {{ s.nombre.split()[0][0] }}{% if s.nombre.split()|length > 1 %}{{ s.nombre.split()[1][0] }}{% endif %}
+                    </div>
+                    <div>
+                      <div class="fw-semibold" style="color: var(--irsi-dark);">{{ s.nombre }}</div>
+                      <div class="text-muted small">ID: {{ s.id }} | {{ s.documento }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <div class="mb-1">
+                      <i class="bi bi-envelope text-muted me-1"></i>
+                      <small>{{ s.emails }}</small>
+                    </div>
+                    {% if s.telefonos %}
+                    <div>
+                      <i class="bi bi-telephone text-muted me-1"></i>
+                      <small>{{ s.telefonos }}</small>
+                    </div>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="program-badge me-2" style="width: 8px; height: 30px; border-radius: 4px; 
+                         background: {% if s.programa_solicitado.value == 'data_science' %}#8b5cf6{% elif s.programa_solicitado.value == 'web_development' %}#06b6d4{% elif s.programa_solicitado.value == 'mobile_development' %}#10b981{% else %}#f59e0b{% endif %};"></div>
+                    <div>
+                      <div class="fw-medium">{{ s.programa_solicitado.name.replace('_',' ').title() }}</div>
+                      <div class="text-muted small">
+                        <i class="bi bi-laptop me-1"></i>
+                        {{ s.modalidad.value }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="text-center">
+                    <div class="fw-medium">{{ s.fecha_registro.strftime('%d/%m/%Y') }}</div>
+                    <div class="text-muted small">{{ s.fecha_registro.strftime('%H:%M') }}</div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  {% if s.promedio %}
+                    <span class="badge" style="background: {% if s.promedio >= 4.5 %}linear-gradient(135deg, #10b981, #059669){% elif s.promedio >= 4.0 %}linear-gradient(135deg, #3b82f6, #1d4ed8){% elif s.promedio >= 3.5 %}linear-gradient(135deg, #f59e0b, #d97706){% else %}linear-gradient(135deg, #ef4444, #dc2626){% endif %}; color: white; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 600;">
+                      {{ "%.1f"|format(s.promedio) }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  {% if s.beca %}
+                    <span class="badge bg-success rounded-pill px-3 py-2">
+                      <i class="bi bi-check-circle me-1"></i>
+                      Convertido
+                    </span>
+                  {% else %}
+                    <span class="badge bg-warning rounded-pill px-3 py-2">
+                      <i class="bi bi-clock me-1"></i>
+                      Pendiente
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="d-flex justify-content-center gap-1">
+                    {% if not s.beca %}
+                      <button type="button" 
+                              class="btn btn-success btn-sm rounded-pill px-3"
+                              onclick="convertToBecado({{ s.id }}, '{{ s.nombre }}')"
+                              title="Convertir a Becado">
+                        <i class="bi bi-mortarboard me-1"></i>
+                        Convertir
+                      </button>
+                    {% else %}
+                      <a href="{{ url_for('becados.detail_becado', becado_id=s.beca.id) }}" 
+                         class="btn btn-outline-primary btn-sm rounded-pill px-3"
+                         title="Ver Becado">
+                        <i class="bi bi-eye me-1"></i>
+                        Ver Becado
+                      </a>
+                    {% endif %}
+                    <button type="button" 
+                            class="btn btn-outline-secondary btn-sm rounded-pill"
+                            onclick="viewDetails({{ s.id }})"
+                            title="Ver Detalles">
+                      <i class="bi bi-info-circle"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   {% else %}
-    <p class="text-muted">No hay solicitantes con estado «Aprobado».</p>
+    <!-- Empty State -->
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <div class="mb-4">
+          <i class="bi bi-inbox" style="font-size: 4rem; color: var(--irsi-gray);"></i>
+        </div>
+        <h4 style="color: var(--irsi-primary);">No hay solicitantes aprobados</h4>
+        <p class="text-muted mb-4">
+          Actualmente no hay solicitantes con estado «Aprobado» para convertir en becados.
+        </p>
+        <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-irsi-primary">
+          <i class="bi bi-person-lines-fill me-2"></i>
+          Ver Todos los Solicitantes
+        </a>
+      </div>
+    </div>
   {% endif %}
 </div>
+
+<!-- Modal para Conversión Individual -->
+<div class="modal fade" id="convertModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary)); color: white;">
+        <h5 class="modal-title">
+          <i class="bi bi-mortarboard me-2"></i>
+          Convertir a Becado
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          Se creará un nuevo registro de becado para el solicitante seleccionado.
+        </div>
+        <div id="convertInfo"></div>
+        <form id="convertForm">
+          <div class="row">
+            <div class="col-md-6">
+              <label class="form-label">Cohorte</label>
+              <input type="text" class="form-control" name="cohorte" value="{{ moment().format('YYYY-MM') if moment else '2025-01' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha de Inicio</label>
+              <input type="date" class="form-control" name="fecha_inicio" value="{{ moment().format('YYYY-MM-DD') if moment else '' }}" required>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <label class="form-label">Sede</label>
+              <input type="text" class="form-control" name="sede" placeholder="Ej: Campus Principal">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">ID Plataforma Externa</label>
+              <input type="text" class="form-control" name="plataforma_externa_id" placeholder="ID en la plataforma educativa">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" onclick="confirmConvert()">
+          <i class="bi bi-check-circle me-2"></i>
+          Confirmar Conversión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Conversión Masiva -->
+<div class="modal fade" id="bulkConvertModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary)); color: white;">
+        <h5 class="modal-title">
+          <i class="bi bi-people-fill me-2"></i>
+          Conversión Masiva de Solicitantes
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Esta acción convertirá múltiples solicitantes a becados simultáneamente.
+        </div>
+        <div id="bulkConvertContent">
+          <p class="text-muted">Selecciona solicitantes en la tabla principal para activar esta función.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="bulkConvertBtn" disabled>
+          <i class="bi bi-people-fill me-2"></i>
+          Convertir Seleccionados
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.solicitante-row {
+  transition: all 0.3s ease;
+}
+
+.solicitante-row:hover {
+  background-color: var(--irsi-light);
+  transform: translateX(2px);
+}
+
+.program-badge {
+  transition: all 0.3s ease;
+}
+
+.solicitante-row:hover .program-badge {
+  transform: scaleY(1.1);
+}
+
+.avatar-circle {
+  transition: all 0.3s ease;
+}
+
+.solicitante-row:hover .avatar-circle {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
+}
+
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+</style>
+
+<script>
+let currentSolicitanteId = null;
+let selectedSolicitantes = [];
+
+// Función para convertir individual
+function convertToBecado(solicitanteId, nombre) {
+  currentSolicitanteId = solicitanteId;
+  document.getElementById('convertInfo').innerHTML = `
+    <div class="card bg-light">
+      <div class="card-body">
+        <h6>Solicitante a convertir:</h6>
+        <p class="mb-0"><strong>${nombre}</strong> (ID: ${solicitanteId})</p>
+      </div>
+    </div>
+  `;
+  new bootstrap.Modal(document.getElementById('convertModal')).show();
+}
+
+// Confirmar conversión individual
+function confirmConvert() {
+  if (!currentSolicitanteId) return;
+  
+  const form = document.getElementById('convertForm');
+  const formData = new FormData(form);
+  
+  // Crear formulario y enviarlo
+  const hiddenForm = document.createElement('form');
+  hiddenForm.method = 'POST';
+  hiddenForm.action = `{{ url_for('becados.convert_solicitante', solicitante_id=0) }}`.replace('0', currentSolicitanteId);
+  
+  // Agregar campos del formulario
+  for (let [key, value] of formData.entries()) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = value;
+    hiddenForm.appendChild(input);
+  }
+  
+  document.body.appendChild(hiddenForm);
+  hiddenForm.submit();
+}
+
+// Función de búsqueda y filtros
+function setupFilters() {
+  const searchInput = document.getElementById('searchInput');
+  const programFilter = document.getElementById('programFilter');
+  const dateFilter = document.getElementById('dateFilter');
+  const statusFilter = document.getElementById('statusFilter');
+  
+  function filterTable() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const programValue = programFilter.value;
+    const dateValue = dateFilter.value;
+    const statusValue = statusFilter.value;
+    
+    const rows = document.querySelectorAll('.solicitante-row');
+    
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const programa = row.dataset.programa;
+      const fecha = row.dataset.fecha;
+      const status = row.dataset.status;
+      
+      const matchSearch = searchTerm === '' || text.includes(searchTerm);
+      const matchProgram = programValue === '' || programa === programValue;
+      const matchDate = dateValue === '' || fecha === dateValue;
+      const matchStatus = statusValue === '' || status === statusValue;
+      
+      if (matchSearch && matchProgram && matchDate && matchStatus) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+  
+  searchInput.addEventListener('input', filterTable);
+  programFilter.addEventListener('change', filterTable);
+  dateFilter.addEventListener('change', filterTable);
+  statusFilter.addEventListener('change', filterTable);
+}
+
+// Función para seleccionar todos
+function selectAll() {
+  const checkboxes = document.querySelectorAll('.solicitante-checkbox:not(:disabled)');
+  checkboxes.forEach(cb => cb.checked = true);
+  updateBulkActions();
+}
+
+// Función para limpiar selección
+function clearSelection() {
+  const checkboxes = document.querySelectorAll('.solicitante-checkbox');
+  checkboxes.forEach(cb => cb.checked = false);
+  updateBulkActions();
+}
+
+// Actualizar acciones masivas
+function updateBulkActions() {
+  const selected = document.querySelectorAll('.solicitante-checkbox:checked');
+  selectedSolicitantes = Array.from(selected).map(cb => cb.value);
+  
+  const bulkBtn = document.getElementById('bulkConvertBtn');
+  if (selectedSolicitantes.length > 0) {
+    bulkBtn.disabled = false;
+    bulkBtn.innerHTML = `<i class="bi bi-people-fill me-2"></i>Convertir ${selectedSolicitantes.length} Seleccionados`;
+  } else {
+    bulkBtn.disabled = true;
+    bulkBtn.innerHTML = '<i class="bi bi-people-fill me-2"></i>Convertir Seleccionados';
+  }
+}
+
+// Ver detalles
+function viewDetails(solicitanteId) {
+  // Implementar vista de detalles del solicitante
+  window.location.href = `{{ url_for('solicitantes.detail_solicitante', solicitante_id=0) }}`.replace('0', solicitanteId);
+}
+
+// Exportar a Excel
+function exportToExcel() {
+  // Implementar exportación a Excel
+  alert('Función de exportación en desarrollo');
+}
+
+// Inicializar cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+  setupFilters();
+  
+  // Event listeners para checkboxes
+  document.querySelectorAll('.solicitante-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateBulkActions);
+  });
+  
+  // Checkbox maestro
+  const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        selectAll();
+      } else {
+        clearSelection();
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

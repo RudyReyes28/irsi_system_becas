@@ -1,0 +1,578 @@
+{% extends 'base.html' %}
+
+{% block title %}Reportes de Becados - IRSI Becas{% endblock %}
+
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+  .stats-card {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.2);
+    transition: transform 0.3s ease;
+    margin-bottom: 1rem;
+  }
+
+  .stats-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-label {
+    font-size: 1rem;
+    opacity: 0.9;
+  }
+
+  .chart-container {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+  }
+
+  .filter-section {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+  }
+
+  .export-buttons {
+    text-align: right;
+    margin-bottom: 1rem;
+  }
+
+  .detail-link {
+    color: var(--irsi-secondary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .detail-link:hover {
+    color: var(--irsi-primary);
+    text-decoration: underline;
+  }
+
+  /* CRÍTICO: Contenedores con altura fija para los canvas */
+  .chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+
+  .chart-wrapper-large {
+    position: relative;
+    height: 400px;
+    width: 100%;
+  }
+
+  /* Asegurar que los canvas no excedan sus contenedores */
+  .chart-container canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">
+          <i class="bi bi-graph-up me-2"></i>
+          Reportes de Becados
+        </h1>
+        <div class="export-buttons">
+          <a href="{{ url_for('becados.export_reporte', **filtros) }}" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel me-2"></i>
+            Exportar Excel
+          </a>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-section">
+        <h5 class="mb-3">
+          <i class="bi bi-funnel me-2"></i>
+          Filtros
+        </h5>
+        <form method="GET" class="row g-3">
+          <div class="col-md-3">
+            <label for="cohorte" class="form-label">Cohorte</label>
+            <select name="cohorte" id="cohorte" class="form-select">
+              <option value="">Todas las cohortes</option>
+              {% for cohorte in distribucion_cohortes.keys() %}
+                <option value="{{ cohorte }}" {% if filtros.cohorte == cohorte %}selected{% endif %}>
+                  {{ cohorte }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="programa" class="form-label">Programa</label>
+            <select name="programa" id="programa" class="form-select">
+              <option value="">Todos los programas</option>
+              {% for programa in estadisticas_programas.keys() %}
+                <option value="{{ programa }}" {% if filtros.programa == programa %}selected{% endif %}>
+                  {{ programa }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+            <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" 
+                   value="{{ filtros.fecha_inicio or '' }}">
+          </div>
+          <div class="col-md-2">
+            <label for="fecha_fin" class="form-label">Fecha Fin</label>
+            <input type="date" name="fecha_fin" id="fecha_fin" class="form-control"
+                   value="{{ filtros.fecha_fin or '' }}">
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-irsi-primary w-100">
+              <i class="bi bi-search me-2"></i>
+              Filtrar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Estadísticas Generales -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="stats-card">
+            <div class="stats-number">{{ estadisticas_generales.total_becados }}</div>
+            <div class="stats-label">Total Becados</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stats-card">
+            <div class="stats-number">{{ estadisticas_generales.activos }}</div>
+            <div class="stats-label">
+              Activos
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stats-card">
+            <div class="stats-number">{{ estadisticas_generales.graduados }}</div>
+            <div class="stats-label">
+              Graduados
+              
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stats-card">
+            <div class="stats-number">{{ estadisticas_generales.desertores }}</div>
+            <div class="stats-label">
+              Desertores
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="row">
+        <!-- Distribución por Estado -->
+        <div class="col-md-6">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="bi bi-pie-chart me-2"></i>
+              Distribución por Estado
+            </h5>
+            <div class="chart-wrapper">
+              <canvas id="estadosChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribución por Programa -->
+        <div class="col-md-6">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="bi bi-bar-chart me-2"></i>
+              Distribución por Programa
+            </h5>
+            <div class="chart-wrapper">
+              <canvas id="programasChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Distribución por Cohorte -->
+      <div class="row">
+        <div class="col-12">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="bi bi-graph-up me-2"></i>
+              Distribución por Cohorte
+            </h5>
+            <div class="chart-wrapper-large">
+              <canvas id="cohortesChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Resumen por Estado -->
+      <div class="row">
+        <div class="col-12">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="bi bi-table me-2"></i>
+              Resumen por Estado
+            </h5>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Estado</th>
+                    <th>Cantidad</th>
+                    <th>Porcentaje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for estado, datos in estadisticas_generales.estados.items() %}
+                  <tr>
+                    <td>
+                      <span class="badge bg-primary">{{ estado }}</span>
+                    </td>
+                    <td>{{ datos.cantidad }}</td>
+                    <td>{{ datos.porcentaje }}%</td>
+                    
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Variable para almacenar las instancias de los gráficos
+let chartsInstances = {};
+
+// Función para destruir gráficos existentes
+function destroyExistingCharts() {
+  Object.keys(chartsInstances).forEach(key => {
+    if (chartsInstances[key]) {
+      chartsInstances[key].destroy();
+      delete chartsInstances[key];
+    }
+  });
+}
+
+// Datos para los gráficos
+const estadosData = {{ distribucion_estados | tojson }};
+const programasData = {{ estadisticas_programas | tojson }};
+const cohortesData = {{ distribucion_cohortes | tojson }};
+
+// Colores para los gráficos
+const colors = [
+  '#1e3a8a', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b',
+  '#ef4444', '#8b5cf6', '#ec4899', '#6b7280', '#14b8a6'
+];
+
+function initializeCharts() {
+  // Destruir gráficos existentes antes de crear nuevos
+  destroyExistingCharts();
+  
+  // Gráfico de Estados (Dona)
+  const ctxEstados = document.getElementById('estadosChart');
+  if (ctxEstados) {
+    chartsInstances.estados = new Chart(ctxEstados, {
+      type: 'doughnut',
+      data: {
+        labels: estadosData.map(item => item.estado),
+        datasets: [{
+          data: estadosData.map(item => item.cantidad),
+          backgroundColor: colors.slice(0, estadosData.length),
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              usePointStyle: true,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((context.parsed / total) * 100);
+                return `${context.label}: ${context.parsed} (${percentage}%)`;
+              }
+            }
+          }
+        },
+        animation: {
+          animateRotate: true,
+          animateScale: false
+        }
+      }
+    });
+  }
+
+  // Gráfico de Programas (Barras horizontales)
+  const ctxProgramas = document.getElementById('programasChart');
+  if (ctxProgramas) {
+    const programasLabels = Object.keys(programasData);
+    const programasValues = programasLabels.map(programa => {
+      return Object.values(programasData[programa]).reduce((a, b) => a + b, 0);
+    });
+
+    chartsInstances.programas = new Chart(ctxProgramas, {
+      type: 'bar',
+      data: {
+        labels: programasLabels,
+        datasets: [{
+          label: 'Total Becados',
+          data: programasValues,
+          backgroundColor: colors[0],
+          borderColor: colors[1],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                return context[0].label;
+              },
+              label: function(context) {
+                return `Total: ${context.parsed.x} becados`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          },
+          y: {
+            ticks: {
+              maxRotation: 0,
+              font: {
+                size: 11
+              }
+            }
+          }
+        },
+        animation: {
+          duration: 1000
+        }
+      }
+    });
+  }
+
+  // Gráfico de Cohortes (Barras apiladas)
+  const ctxCohortes = document.getElementById('cohortesChart');
+  if (ctxCohortes) {
+    const cohortesLabels = Object.keys(cohortesData);
+    const estadosUnicos = [...new Set(
+      Object.values(cohortesData).flatMap(cohorte => Object.keys(cohorte))
+    )];
+
+    const cohortesDatasets = estadosUnicos.map((estado, index) => ({
+      label: estado,
+      data: cohortesLabels.map(cohorte => cohortesData[cohorte][estado] || 0),
+      backgroundColor: colors[index % colors.length],
+      borderColor: colors[index % colors.length],
+      borderWidth: 1
+    }));
+
+    chartsInstances.cohortes = new Chart(ctxCohortes, {
+      type: 'bar',
+      data: {
+        labels: cohortesLabels,
+        datasets: cohortesDatasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 11
+              }
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              title: function(context) {
+                return `Cohorte: ${context[0].label}`;
+              },
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y}`;
+              },
+              footer: function(tooltipItems) {
+                let total = 0;
+                tooltipItems.forEach(item => {
+                  total += item.parsed.y;
+                });
+                return `Total: ${total}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: {
+              maxRotation: 45,
+              font: {
+                size: 10
+              }
+            }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        },
+        animation: {
+          duration: 1000
+        }
+      }
+    });
+  }
+}
+
+// Función para manejar el redimensionamiento
+function handleResize() {
+  // Debounce para evitar múltiples llamadas
+  clearTimeout(window.resizeTimer);
+  window.resizeTimer = setTimeout(() => {
+    Object.values(chartsInstances).forEach(chart => {
+      if (chart) {
+        chart.resize();
+      }
+    });
+  }, 250);
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+  // Esperar un poco para asegurar que los elementos estén completamente renderizados
+  setTimeout(() => {
+    initializeCharts();
+  }, 100);
+  
+  // Manejar redimensionamiento de ventana
+  window.addEventListener('resize', handleResize);
+  
+  // Agregar efecto hover a las tarjetas de estadísticas
+  const statsCards = document.querySelectorAll('.stats-card');
+  statsCards.forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-5px) scale(1.02)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0) scale(1)';
+    });
+  });
+  
+  // Validación de fechas en el formulario de filtros
+  const fechaInicio = document.getElementById('fecha_inicio');
+  const fechaFin = document.getElementById('fecha_fin');
+  
+  if (fechaInicio && fechaFin) {
+    fechaInicio.addEventListener('change', function() {
+      if (fechaFin.value && this.value > fechaFin.value) {
+        alert('La fecha de inicio no puede ser mayor que la fecha de fin');
+        this.value = '';
+      }
+    });
+    
+    fechaFin.addEventListener('change', function() {
+      if (fechaInicio.value && this.value < fechaInicio.value) {
+        alert('La fecha de fin no puede ser menor que la fecha de inicio');
+        this.value = '';
+      }
+    });
+  }
+});
+
+// Función para exportar gráficos como imágenes
+function exportarGrafico(chartId, filename) {
+  const chartInstance = chartsInstances[chartId.replace('Chart', '')];
+  if (chartInstance) {
+    const url = chartInstance.toBase64Image();
+    const link = document.createElement('a');
+    link.download = filename + '.png';
+    link.href = url;
+    link.click();
+  }
+}
+
+// Agregar tooltips a los elementos con título
+document.addEventListener('DOMContentLoaded', function() {
+  const tooltips = document.querySelectorAll('[title]');
+  tooltips.forEach(element => {
+    if (typeof bootstrap !== 'undefined') {
+      new bootstrap.Tooltip(element);
+    }
+  });
+});
+
+// Limpiar al salir de la página
+window.addEventListener('beforeunload', function() {
+  destroyExistingCharts();
+});
+</script>
+
+{% endblock %}

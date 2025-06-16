@@ -1,19 +1,367 @@
 {% extends 'base.html' %}
-{% block title %}Cambiar estado{% endblock %}
+{% block title %}Cambiar Estado - {{ becado.solicitante.nombre }}{% endblock %}
+
+{% block head %}
+<style>
+  .form-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .form-header {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .form-header::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+
+  .form-header h2 {
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .form-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+  }
+
+  .form-body {
+    background: white;
+    padding: 2rem;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .current-status {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--irsi-secondary);
+  }
+
+  .status-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-activo { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+  .status-en_pausa { background: linear-gradient(135deg, #ffc107, #fd7e14); color: white; }
+  .status-desertor { background: linear-gradient(135deg, #dc3545, #e83e8c); color: white; }
+  .status-graduado { background: linear-gradient(135deg, #6f42c1, #007bff); color: white; }
+  .status-suspendido { background: linear-gradient(135deg, #6c757d, #495057); color: white; }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    font-weight: 700;
+    color: var(--irsi-primary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .form-label i {
+    margin-right: 0.5rem;
+    color: var(--irsi-secondary);
+  }
+
+  .form-control, .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8fafc;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: var(--irsi-secondary);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    background-color: white;
+  }
+
+  .form-control:valid, .form-select:valid {
+    border-color: #28a745;
+  }
+
+  .form-control:invalid, .form-select:invalid {
+    border-color: #dc3545;
+  }
+
+  .invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+  }
+
+  .valid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #28a745;
+  }
+
+  .state-preview {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border-left: 4px solid var(--irsi-secondary);
+    display: none;
+  }
+
+  .state-preview.show {
+    display: block;
+    animation: fadeInUp 0.3s ease;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-submit:hover {
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    color: white;
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-cancel {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .btn-cancel:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    transform: translateY(-2px);
+    color: white;
+  }
+
+  .form-help {
+    font-size: 0.9rem;
+    color: var(--irsi-gray);
+    margin-top: 0.5rem;
+  }
+
+  .character-count {
+    font-size: 0.8rem;
+    color: var(--irsi-gray);
+    text-align: right;
+    margin-top: 0.25rem;
+  }
+
+  .loading-spinner {
+    display: none;
+    margin-left: 0.5rem;
+  }
+
+  .loading .loading-spinner {
+    display: inline-block;
+  }
+
+  @media (max-width: 768px) {
+    .form-container {
+      margin: 1rem;
+    }
+    
+    .form-header, .form-body {
+      padding: 1.5rem;
+    }
+    
+    .status-info {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .status-badge {
+      margin-top: 0.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<form method="post" action="{{ url_for('becados.change_state', becado_id=becado.id) }}">
-  <div class="mb-3">
-    <label for="estado">Nuevo Estado</label>
-    <select name="estado" class="form-select">
-      {% for st in EstadoBeca %}
-        <option value="{{ st.name }}">{{ st.name.title() }}</option>
-      {% endfor %}
-    </select>
+<div class="container-fluid">
+  <div class="form-container">
+    <div class="form-header">
+      <h2><i class="bi bi-arrow-repeat me-2"></i>Cambiar Estado del Becado</h2>
+      <p>{{ becado.solicitante.nombre }} - {{ becado.cohorte }}</p>
+    </div>
+
+    <div class="form-body">
+      <!-- Estado Actual -->
+      <div class="current-status">
+        <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Estado Actual</h5>
+        <div class="status-info">
+          <div>
+            <strong>Estado:</strong>
+            <span class="status-badge status-{{ becado.estado.name.lower() }} ms-2">
+              {{ becado.estado.name.title() }}
+            </span>
+          </div>
+          <div class="mt-2 mt-md-0">
+            <small class="text-muted">
+              <i class="bi bi-clock me-1"></i>
+              Último cambio: {{ becado.fecha_ultimo_cambio_estado.strftime('%d/%m/%Y %H:%M') if becado.fecha_ultimo_cambio_estado else 'N/A' }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario -->
+      <form method="post" action="{{ url_for('becados.change_state', becado_id=becado.id) }}" id="changeStateForm" novalidate>
+        <!-- Nuevo Estado -->
+        <div class="form-group">
+          <label for="estado" class="form-label">
+            <i class="bi bi-toggle-on"></i>Nuevo Estado
+          </label>
+          <select name="estado" id="estado" class="form-select" required>
+            <option value="">Seleccione un estado...</option>
+            {% for estado in EstadoBeca %}
+            <option value="{{ estado.name }}" {% if estado == becado.estado %}disabled{% endif %}>
+              {{ estado.name.title() }}
+              {% if estado == becado.estado %} (Actual){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+          <div class="invalid-feedback">
+            Por favor, seleccione un nuevo estado.
+          </div>
+          <div class="valid-feedback">
+            Estado seleccionado correctamente.
+          </div>
+          <div class="form-help">
+            Seleccione el nuevo estado del becado. Los estados disponibles dependen de la situación actual del becado.
+          </div>
+        </div>
+        <!-- Comentarios -->
+        <div class="form-group">
+          <label for="comentarios" class="form-label">
+            <i class="bi bi-chat-dots"></i>Comentarios (opcional)
+          </label>
+          <textarea name="comentarios" id="comentarios" class="form-control" rows="3" maxlength="500" placeholder="Ingrese comentarios adicionales sobre el cambio de estado..."></textarea>
+          <div class="character-count">Máximo 500 caracteres</div>
+          <div class="form-help">
+            Puede agregar comentarios para registrar el motivo del cambio de estado.
+          </div>
+        </div>
+        <!-- Botones -->
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-submit loading" id="submitButton">
+            <i class="bi bi-check-circle"></i> Cambiar Estado
+            <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </button>
+        </div>
+        <!-- Vista previa del estado -->
+        <div class="state-preview" id="statePreview">
+          <h5><i class="bi bi-eye me-2"></i>Vista Previa del Cambio</h5>
+          <p><strong>Nuevo Estado:</strong> <span id="previewEstado"></span></p>
+          <p><strong>Comentarios:</strong> <span id="previewComentarios">Ninguno</span></p>
+        </div>
+      </form>
+    </div>
   </div>
-  <div class="mb-3">
-    <label for="comentario">Comentario</label>
-    <textarea name="comentario" class="form-control" rows="2"></textarea>
-  </div>
-  <button type="submit" class="btn btn-primary">Guardar</button>
-</form>
-{%endblock%}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const estadoSelect = document.getElementById('estado');
+    const comentariosInput = document.getElementById('comentarios');
+    const statePreview = document.getElementById('statePreview');
+    const previewEstado = document.getElementById('previewEstado');
+    const previewComentarios = document.getElementById('previewComentarios');
+    const submitButton = document.getElementById('submitButton');
+
+    // Actualizar vista previa al cambiar el estado
+    estadoSelect.addEventListener('change', function() {
+      previewEstado.textContent = this.value ? this.value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Ninguno';
+      statePreview.classList.add('show');
+    });
+
+    // Actualizar vista previa al escribir en comentarios
+    comentariosInput.addEventListener('input', function() {
+      previewComentarios.textContent = this.value.trim() || 'Ninguno';
+      statePreview.classList.add('show');
+    });
+
+    // Validación del formulario
+    const form = document.getElementById('changeStateForm');
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      } else {
+        submitButton.classList.add('loading');
+      }
+      form.classList.add('was-validated');
+    });
+  });
+
+</script>
+{% endblock %}

@@ -10,3 +10,5 @@ WTForms
 Flask-Login
 Flask-Mail
 itsdangerous
+pandas
+openpyxl
