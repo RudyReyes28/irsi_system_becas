@@ -123,3 +123,31 @@ def reset_password(user_id):
         flash('Contraseña restablecida correctamente.', 'success')
         return redirect(url_for('users.detail_user', user_id=user.id))
     return render_template('reset_password.html', form=form, user=user)
+
+# Agregar esta ruta a tu archivo de rutas users.py
+
+@users_bp.route('/<int:user_id>/reset_failed_attempts', methods=['POST'])
+@login_required
+@require_role('Administrador')
+def reset_failed_attempts(user_id):
+    """Restablece los intentos fallidos de login de un usuario"""
+    user = User.query.get_or_404(user_id)
+    datos_antes = {
+        'intentos_fallidos': user.intentos_fallidos,
+        'ultimo_intento_fallido': user.ultimo_intento_fallido
+    }
+    
+    user.reset_failed_attempts()
+    db.session.commit()
+    
+    datos_despues = {
+        'intentos_fallidos': user.intentos_fallidos,
+        'ultimo_intento_fallido': user.ultimo_intento_fallido
+    }
+    
+    auditar_cambio(current_user.id, 'usuarios', 'UPDATE', user.id, datos_antes, datos_despues)
+    
+    return jsonify({
+        'success': True, 
+        'message': 'Intentos fallidos restablecidos correctamente'
+    })

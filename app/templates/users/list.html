@@ -1,70 +1,469 @@
 {% extends 'base.html' %}
-{% block title %}Listado de Usuarios{% endblock %}
+{% block title %}Gestión de Usuarios - IRSI Becas{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h2>Usuarios</h2>
-  <a href="{{ url_for('users.create_user') }}" class="btn btn-primary">Crear Usuario</a>
-</div>
-<form method="get" class="mb-3">
-  <div class="input-group">
-    <input type="text" name="search" class="form-control" placeholder="Buscar por correo" value="{{ search }}">
-    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+<!-- Header Section -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="h2 mb-1" style="color: var(--irsi-primary); font-weight: 700;">
+          <i class="bi bi-people-fill me-2" style="color: var(--irsi-accent);"></i>
+          Gestión de Usuarios
+        </h1>
+        <p class="text-muted mb-0">Administra los usuarios del sistema</p>
+      </div>
+      <div>
+        <a href="{{ url_for('users.create_user') }}" class="btn btn-irsi-primary">
+          <i class="bi bi-person-plus me-2"></i>
+          Nuevo Usuario
+        </a>
+      </div>
+    </div>
   </div>
-</form>
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Nombre</th>
-      <th>Correo</th>
-      <th>Rol</th>
-      <th>Activo</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for user in pagination.items %}
-    <tr>
-      <td>{{ user.id }}</td>
-      <td>{{ user.nombre }}</td>
-      <td>{{ user.email }}</td>
-      <td>{{ user.rol }}</td>
-      <td>
-        <input type="checkbox" class="active-toggle" data-id="{{ user.id }}" {% if user.activo %}checked{% endif %}>
-      </td>
-      <td>
-        <a href="{{ url_for('users.detail_user', user_id=user.id) }}" class="btn btn-sm btn-info">Ver</a>
-        <a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-sm btn-warning">Editar</a>
-        <button class="btn btn-sm btn-danger delete-btn" data-id="{{ user.id }}">Eliminar</button>
-        <a href="{{ url_for('users.reset_password', user_id=user.id) }}" class="btn btn-sm btn-secondary">Resetear Contraseña</a>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-<nav>
-  <ul class="pagination">
-    {% if pagination.has_prev %}
-      <li class="page-item">
-        <a class="page-link" href="?page={{ pagination.prev_num }}&search={{ search }}">Anterior</a>
-      </li>
-    {% endif %}
-    {% for page_num in pagination.iter_pages() %}
-      {% if page_num %}
-        <li class="page-item {% if pagination.page == page_num %}active{% endif %}">
-          <a class="page-link" href="?page={{ page_num }}&search={{ search }}">{{ page_num }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
-    {% if pagination.has_next %}
-      <li class="page-item">
-        <a class="page-link" href="?page={{ pagination.next_num }}&search={{ search }}">Siguiente</a>
-      </li>
-    {% endif %}
-  </ul>
-</nav>
+</div>
+
+<!-- Search and Filters Section -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form method="get" class="row g-3">
+          <div class="col-md-8">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0">
+                <i class="bi bi-search text-muted"></i>
+              </span>
+              <input 
+                type="text" 
+                name="search" 
+                class="form-control border-start-0" 
+                placeholder="Buscar por nombre o correo electrónico..." 
+                value="{{ search }}"
+                style="box-shadow: none;"
+              >
+            </div>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit">
+              <i class="bi bi-search me-1"></i>
+              Buscar
+            </button>
+          </div>
+          <div class="col-md-2">
+            {% if search %}
+              <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-x-circle me-1"></i>
+                Limpiar
+              </a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));">
+      <div class="card-body text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title mb-0 opacity-75">Total Usuarios</h6>
+            <h3 class="mb-0 fw-bold">{{ pagination.total }}</h3>
+          </div>
+          <div class="opacity-75">
+            <i class="bi bi-people fs-2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, #28a745, #20c997);">
+      <div class="card-body text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title mb-0 opacity-75">Usuarios Activos</h6>
+            <h3 class="mb-0 fw-bold">{{ pagination.items | selectattr('activo') | list | length }}</h3>
+          </div>
+          <div class="opacity-75">
+            <i class="bi bi-person-check fs-2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+      <div class="card-body text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title mb-0 opacity-75">Administradores</h6>
+            <h3 class="mb-0 fw-bold">{{ pagination.items | selectattr('rol', 'equalto', 'Administrador') | list | length }}</h3>
+          </div>
+          <div class="opacity-75">
+            <i class="bi bi-shield-check fs-2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, var(--irsi-accent), #0891b2);">
+      <div class="card-body text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title mb-0 opacity-75">Otros Roles</h6>
+            <h3 class="mb-0 fw-bold">{{ pagination.items | rejectattr('rol', 'equalto', 'Administrador') | list | length }}</h3>
+          </div>
+          <div class="opacity-75">
+            <i class="bi bi-person-gear fs-2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Users Table -->
+<div class="row">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-light border-0 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-semibold" style="color: var(--irsi-primary);">
+            <i class="bi bi-table me-2"></i>
+            Lista de Usuarios
+          </h5>
+          <small class="text-muted">
+            Mostrando {{ pagination.items|length }} de {{ pagination.total }} usuarios
+          </small>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% if pagination.items %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="border-0 fw-semibold" style="color: var(--irsi-primary);">
+                    <i class="bi bi-hash me-1"></i>ID
+                  </th>
+                  <th class="border-0 fw-semibold" style="color: var(--irsi-primary);">
+                    <i class="bi bi-person me-1"></i>Usuario
+                  </th>
+                  <th class="border-0 fw-semibold" style="color: var(--irsi-primary);">
+                    <i class="bi bi-shield me-1"></i>Rol
+                  </th>
+                  <th class="border-0 fw-semibold text-center" style="color: var(--irsi-primary);">
+                    <i class="bi bi-toggle-on me-1"></i>Estado
+                  </th>
+                  <th class="border-0 fw-semibold" style="color: var(--irsi-primary);">
+                    <i class="bi bi-calendar me-1"></i>Fecha Registro
+                  </th>
+                  <th class="border-0 fw-semibold" style="color: var(--irsi-primary);">
+                    <i class="bi bi-clock me-1"></i>Último Acceso
+                  </th>
+                  <th class="border-0 fw-semibold text-center" style="color: var(--irsi-primary);">
+                    <i class="bi bi-gear me-1"></i>Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in pagination.items %}
+                <tr>
+                  <td class="align-middle">
+                    <span class="badge bg-light text-dark fw-normal">#{{ user.id }}</span>
+                  </td>
+                  <td class="align-middle">
+                    <div class="d-flex align-items-center">
+                      <div class="user-avatar me-3" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem;">
+                        {{ user.nombre[0].upper() }}
+                      </div>
+                      <div>
+                        <div class="fw-semibold text-dark">{{ user.nombre }}</div>
+                        <small class="text-muted">{{ user.email }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="align-middle">
+                    {% set role_colors = {
+                      'Administrador': 'danger',
+                      'Director': 'primary',
+                      'Asistente': 'warning',
+                      'Consulta': 'info'
+                    } %}
+                    <span class="badge bg-{{ role_colors.get(user.rol, 'secondary') }} fs-6 px-3 py-2">
+                      {% if user.rol == 'Administrador' %}
+                        <i class="bi bi-shield-fill-exclamation me-1"></i>
+                      {% elif user.rol == 'Director' %}
+                        <i class="bi bi-person-badge me-1"></i>
+                      {% elif user.rol == 'Asistente' %}
+                        <i class="bi bi-person-gear me-1"></i>
+                      {% else %}
+                        <i class="bi bi-eye me-1"></i>
+                      {% endif %}
+                      {{ user.rol }}
+                    </span>
+                  </td>
+                  <td class="align-middle text-center">
+                    <div class="form-check form-switch d-flex justify-content-center">
+                      <input 
+                        class="form-check-input active-toggle" 
+                        type="checkbox" 
+                        data-id="{{ user.id }}" 
+                        {% if user.activo %}checked{% endif %}
+                        style="cursor: pointer;"
+                      >
+                    </div>
+                  </td>
+                  <td class="align-middle">
+                    <small class="text-muted">
+                      <i class="bi bi-calendar3 me-1"></i>
+                      {{ user.fecha_creacion.strftime('%d/%m/%Y') if user.fecha_creacion else 'N/A' }}
+                      <br>
+                      <i class="bi bi-clock me-1"></i>
+                      {{ user.fecha_creacion.strftime('%H:%M') if user.fecha_creacion else '' }}
+                    </small>
+                  </td>
+                  <td class="align-middle">
+                    <small class="text-muted">
+                      {% if user.ultimo_acceso %}
+                        <i class="bi bi-calendar-check me-1"></i>
+                        {{ user.ultimo_acceso.strftime('%d/%m/%Y') }}
+                        <br>
+                        <i class="bi bi-clock me-1"></i>
+                        {{ user.ultimo_acceso.strftime('%H:%M') }}
+                      {% else %}
+                        <span class="text-warning">
+                          <i class="bi bi-dash-circle me-1"></i>
+                          Nunca
+                        </span>
+                      {% endif %}
+                    </small>
+                  </td>
+                  <td class="align-middle text-center">
+                    <div class="btn-group" role="group">
+                      <a 
+                        href="{{ url_for('users.detail_user', user_id=user.id) }}" 
+                        class="btn btn-outline-info btn-sm" 
+                        data-bs-toggle="tooltip" 
+                        title="Ver detalles"
+                      >
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a 
+                        href="{{ url_for('users.edit_user', user_id=user.id) }}" 
+                        class="btn btn-outline-warning btn-sm" 
+                        data-bs-toggle="tooltip" 
+                        title="Editar usuario"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a 
+                        href="{{ url_for('users.reset_password', user_id=user.id) }}" 
+                        class="btn btn-outline-secondary btn-sm" 
+                        data-bs-toggle="tooltip" 
+                        title="Resetear contraseña"
+                      >
+                        <i class="bi bi-key"></i>
+                      </a>
+                      <button 
+                        class="btn btn-outline-danger btn-sm delete-btn" 
+                        data-id="{{ user.id }}" 
+                        data-name="{{ user.nombre }}"
+                        data-bs-toggle="tooltip" 
+                        title="Eliminar usuario"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-5">
+            <div class="mb-3">
+              <i class="bi bi-person-x fs-1 text-muted"></i>
+            </div>
+            <h5 class="text-muted">No se encontraron usuarios</h5>
+            <p class="text-muted mb-3">
+              {% if search %}
+                No hay usuarios que coincidan con "{{ search }}"
+              {% else %}
+                No hay usuarios registrados en el sistema
+              {% endif %}
+            </p>
+            {% if search %}
+              <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>Ver todos los usuarios
+              </a>
+            {% else %}
+              <a href="{{ url_for('users.create_user') }}" class="btn btn-irsi-primary">
+                <i class="bi bi-person-plus me-2"></i>Crear primer usuario
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<div class="row mt-4">
+  <div class="col-12">
+    <nav aria-label="Navegación de páginas">
+      <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pagination.prev_num }}&search={{ search }}">
+              <i class="bi bi-chevron-left me-1"></i>Anterior
+            </a>
+          </li>
+        {% endif %}
+        
+        {% for page_num in pagination.iter_pages() %}
+          {% if page_num %}
+            <li class="page-item {% if pagination.page == page_num %}active{% endif %}">
+              <a class="page-link" href="?page={{ page_num }}&search={{ search }}">{{ page_num }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+          {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pagination.next_num }}&search={{ search }}">
+              Siguiente<i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" id="deleteModalLabel" style="color: var(--irsi-primary);">
+          <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+          Confirmar Eliminación
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">¿Estás seguro de que deseas eliminar al usuario <strong id="userName"></strong>?</p>
+        <div class="alert alert-danger d-flex align-items-center">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <div>
+            <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-2"></i>Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">
+          <i class="bi bi-trash me-2"></i>Eliminar Usuario
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Handle active toggle
+    document.querySelectorAll('.active-toggle').forEach(function(toggle) {
+        toggle.addEventListener('change', function() {
+            const userId = this.dataset.id;
+            const isActive = this.checked;
+            
+            fetch(`/users/${userId}/toggle_active`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        <i class="bi bi-check-circle me-2"></i>
+                        Estado del usuario actualizado correctamente.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.main-content .container-fluid').insertBefore(alertDiv, document.querySelector('.main-content .container-fluid').firstChild);
+                    
+                    // Auto-dismiss after 3 seconds
+                    setTimeout(() => {
+                        alertDiv.remove();
+                    }, 3000);
+                } else {
+                    // Revert toggle state
+                    this.checked = !isActive;
+                    alert('Error al actualizar el estado del usuario');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.checked = !isActive;
+                alert('Error al actualizar el estado del usuario');
+            });
+        });
+    });
+
+    // Handle delete button
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    let userIdToDelete = null;
+
+    document.querySelectorAll('.delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            userIdToDelete = this.dataset.id;
+            const userName = this.dataset.name;
+            document.getElementById('userName').textContent = userName;
+            deleteModal.show();
+        });
+    });
+
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        if (userIdToDelete) {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/users/${userIdToDelete}/delete`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+});
+</script>
 {% endblock %}

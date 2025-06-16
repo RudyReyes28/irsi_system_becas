@@ -1,16 +1,608 @@
 {% extends 'base.html' %}
-{% block title %}Detalle Usuario{% endblock %}
+
+{% block title %}Detalle de {{ user.nombre }}{% endblock %}
+
 {% block content %}
-<h2>Detalle de Usuario</h2>
-<table class="table">
-  <tr><th>ID:</th><td>{{ user.id }}</td></tr>
-  <tr><th>Nombre:</th><td>{{ user.nombre }}</td></tr>
-  <tr><th>Correo:</th><td>{{ user.email }}</td></tr>
-  <tr><th>Rol:</th><td>{{ user.rol }}</td></tr>
-  <tr><th>Activo:</th><td>{{ 'Sí' if user.activo else 'No' }}</td></tr>
-  <tr><th>Fecha Creación:</th><td>{{ user.fecha_creacion }}</td></tr>
-  <tr><th>Último Acceso:</th><td>{{ user.ultimo_acceso }}</td></tr>
-</table>
-<a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-warning">Editar</a>
-<a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">Volver</a>
+<div class="container-fluid">
+  <!-- Header con breadcrumb -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('main.index') }}" class="text-decoration-none">
+              <i class="bi bi-house"></i> Inicio
+            </a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('users.list_users') }}" class="text-decoration-none">
+              <i class="bi bi-people"></i> Usuarios
+            </a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-person"></i> {{ user.nombre }}
+          </li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Título y acciones -->
+  <div class="row mb-4">
+    <div class="col-lg-8">
+      <div class="d-flex align-items-center mb-3">
+        <div class="user-avatar-large me-3">
+          {{ user.nombre[0].upper() }}
+        </div>
+        <div>
+          <h1 class="mb-1 text-irsi-dark">{{ user.nombre }}</h1>
+          <p class="text-muted mb-0">
+            <i class="bi bi-shield-check me-1"></i>
+            {{ user.rol }}
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+      <div class="btn-group" role="group">
+        <a href="{{ url_for('users.edit_user', user_id=user.id) }}" 
+           class="btn btn-warning">
+          <i class="bi bi-pencil"></i> Editar
+        </a>
+        <a href="{{ url_for('users.reset_password', user_id=user.id) }}" 
+           class="btn btn-info">
+          <i class="bi bi-key"></i> Restablecer Contraseña
+        </a>
+        <a href="{{ url_for('users.list_users') }}" 
+           class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i> Volver
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Información Principal -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-info-circle text-primary me-2"></i>
+            Información Personal
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="info-label">ID de Usuario</label>
+                <div class="info-value">
+                  <span class="badge bg-light text-dark fs-6">#{{ user.id }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="info-label">Nombre Completo</label>
+                <div class="info-value">
+                  <i class="bi bi-person-circle text-primary me-2"></i>
+                  {{ user.nombre }}
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="info-label">Correo Electrónico</label>
+                <div class="info-value">
+                  <i class="bi bi-envelope text-primary me-2"></i>
+                  <a href="mailto:{{ user.email }}" class="text-decoration-none">
+                    {{ user.email }}
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="info-label">Rol del Sistema</label>
+                <div class="info-value">
+                  <span class="badge role-badge role-{{ user.rol.lower() }}">
+                    <i class="bi bi-shield-check me-1"></i>
+                    {{ user.rol }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de Seguridad -->
+      <div class="card mb-4">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-shield-lock text-warning me-2"></i>
+            Información de Seguridad
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="info-label">Intentos Fallidos</label>
+                <div class="info-value">
+                  {% if user.intentos_fallidos > 0 %}
+                    <span class="badge bg-warning text-dark">
+                      <i class="bi bi-exclamation-triangle me-1"></i>
+                      {{ user.intentos_fallidos }} intentos
+                    </span>
+                  {% else %}
+                    <span class="badge bg-success">
+                      <i class="bi bi-check-circle me-1"></i>
+                      Sin intentos fallidos
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="info-label">Último Intento Fallido</label>
+                <div class="info-value">
+                  {% if user.ultimo_intento_fallido %}
+                    <i class="bi bi-clock text-warning me-2"></i>
+                    {{ user.ultimo_intento_fallido.strftime('%d/%m/%Y %H:%M') }}
+                  {% else %}
+                    <span class="text-muted">
+                      <i class="bi bi-dash-circle me-2"></i>
+                      Nunca
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="info-item">
+                <label class="info-label">Estado de Seguridad</label>
+                <div class="info-value">
+                  {% if user.is_account_locked() %}
+                    <span class="badge bg-danger">
+                      <i class="bi bi-lock me-1"></i>
+                      Cuenta Bloqueada
+                    </span>
+                  {% else %}
+                    <span class="badge bg-success">
+                      <i class="bi bi-unlock me-1"></i>
+                      Cuenta Desbloqueada
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Lateral -->
+    <div class="col-lg-4">
+      <!-- Estado del Usuario -->
+      <div class="card mb-4">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-activity text-success me-2"></i>
+            Estado del Usuario
+          </h5>
+        </div>
+        <div class="card-body text-center">
+          <div class="status-indicator mb-3">
+            {% if user.activo %}
+              <div class="status-dot status-active"></div>
+              <h6 class="text-success mb-0">Usuario Activo</h6>
+            {% else %}
+              <div class="status-dot status-inactive"></div>
+              <h6 class="text-danger mb-0">Usuario Inactivo</h6>
+            {% endif %}
+          </div>
+          
+          {% if user.activo %}
+            <button class="btn btn-outline-danger btn-sm" 
+                    onclick="toggleUserStatus({{ user.id }}, false)">
+              <i class="bi bi-pause-circle"></i> Desactivar Usuario
+            </button>
+          {% else %}
+            <button class="btn btn-outline-success btn-sm" 
+                    onclick="toggleUserStatus({{ user.id }}, true)">
+              <i class="bi bi-play-circle"></i> Activar Usuario
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Fechas Importantes -->
+      <div class="card mb-4">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-calendar-event text-info me-2"></i>
+            Fechas Importantes
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-marker bg-primary"></div>
+              <div class="timeline-content">
+                <h6 class="timeline-title">Fecha de Creación</h6>
+                <p class="timeline-date">
+                  <i class="bi bi-calendar-plus me-1"></i>
+                  {{ user.fecha_creacion.strftime('%d/%m/%Y') }}
+                </p>
+                <small class="text-muted">
+                  {{ user.fecha_creacion.strftime('%H:%M hrs') }}
+                </small>
+              </div>
+            </div>
+            
+            <div class="timeline-item">
+              <div class="timeline-marker bg-success"></div>
+              <div class="timeline-content">
+                <h6 class="timeline-title">Último Acceso</h6>
+                {% if user.ultimo_acceso %}
+                  <p class="timeline-date">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>
+                    {{ user.ultimo_acceso.strftime('%d/%m/%Y') }}
+                  </p>
+                  <small class="text-muted">
+                    {{ user.ultimo_acceso.strftime('%H:%M hrs') }}
+                  </small>
+                {% else %}
+                  <p class="text-muted">
+                    <i class="bi bi-dash-circle me-1"></i>
+                    Nunca ha accedido
+                  </p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones Rápidas -->
+      <div class="card">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-lightning text-warning me-2"></i>
+            Acciones Rápidas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('users.edit_user', user_id=user.id) }}" 
+               class="btn btn-outline-warning">
+              <i class="bi bi-pencil me-2"></i>Editar Usuario
+            </a>
+            <a href="{{ url_for('users.reset_password', user_id=user.id) }}" 
+               class="btn btn-outline-info">
+              <i class="bi bi-key me-2"></i>Cambiar Contraseña
+            </a>
+            {% if user.intentos_fallidos > 0 %}
+            <button class="btn btn-outline-success" 
+                    onclick="resetFailedAttempts({{ user.id }})">
+              <i class="bi bi-arrow-clockwise me-2"></i>Restablecer Intentos
+            </button>
+            {% endif %}
+            <hr class="my-2">
+            <button class="btn btn-outline-danger" 
+                    onclick="confirmDelete({{ user.id }}, '{{ user.nombre }}')">
+              <i class="bi bi-trash me-2"></i>Eliminar Usuario
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modales -->
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Confirmar Eliminación
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Está seguro que desea eliminar al usuario <strong id="deleteUserName"></strong>?</p>
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Esta acción no se puede deshacer.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form id="deleteForm" method="POST" style="display: inline;">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash me-2"></i>Eliminar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block head %}
+<style>
+  /* Avatar grande */
+  .user-avatar-large {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Items de información */
+  .info-item {
+    margin-bottom: 1rem;
+  }
+
+  .info-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--irsi-gray);
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+
+  .info-value {
+    font-size: 1rem;
+    color: var(--irsi-dark);
+    font-weight: 500;
+  }
+
+  /* Badges de roles */
+  .role-badge {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .role-administrador {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+  }
+
+  .role-director {
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+    color: white;
+  }
+
+  .role-asistente {
+    background: linear-gradient(135deg, #20c997, #1ba085);
+    color: white;
+  }
+
+  .role-consulta {
+    background: linear-gradient(135deg, #6c757d, #545b62);
+    color: white;
+  }
+
+  /* Indicador de estado */
+  .status-indicator {
+    position: relative;
+  }
+
+  .status-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin: 0 auto 0.5rem;
+    position: relative;
+  }
+
+  .status-active {
+    background-color: #28a745;
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.2);
+  }
+
+  .status-inactive {
+    background-color: #dc3545;
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.2);
+  }
+
+  .status-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background-color: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--irsi-primary), var(--irsi-accent));
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+
+  .timeline-content {
+    background: rgba(248, 250, 252, 0.8);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--irsi-accent);
+  }
+
+  .timeline-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--irsi-dark);
+  }
+
+  .timeline-date {
+    margin-bottom: 0.125rem;
+    color: var(--irsi-gray);
+    font-size: 0.875rem;
+  }
+
+  /* Breadcrumb personalizado */
+  .breadcrumb {
+    background-color: rgba(248, 250, 252, 0.8);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: var(--irsi-gray);
+  }
+
+  .breadcrumb-item.active {
+    color: var(--irsi-primary);
+    font-weight: 600;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .user-avatar-large {
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .btn-group .btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Función para cambiar el estado del usuario
+  function toggleUserStatus(userId, activate) {
+    const action = activate ? 'activar' : 'desactivar';
+    const confirmMessage = `¿Está seguro que desea ${action} este usuario?`;
+    
+    if (confirm(confirmMessage)) {
+      fetch(`/users/${userId}/toggle_active`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Error al cambiar el estado del usuario');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error al cambiar el estado del usuario');
+      });
+    }
+  }
+
+  // Función para confirmar eliminación
+  function confirmDelete(userId, userName) {
+    document.getElementById('deleteUserName').textContent = userName;
+    document.getElementById('deleteForm').action = `/users/${userId}/delete`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+  }
+
+  // Función para restablecer intentos fallidos
+  function resetFailedAttempts(userId) {
+    if (confirm('¿Está seguro que desea restablecer los intentos fallidos?')) {
+      fetch(`/users/${userId}/reset_failed_attempts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Error al restablecer los intentos fallidos');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error al restablecer los intentos fallidos');
+      });
+    }
+  }
+
+  // Animaciones y efectos
+  document.addEventListener('DOMContentLoaded', function() {
+    // Animación de entrada para las cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'all 0.5s ease';
+      
+      setTimeout(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 100);
+    });
+
+    // Tooltips para los iconos
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
 {% endblock %}
