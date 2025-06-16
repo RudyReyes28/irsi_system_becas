@@ -623,7 +623,7 @@ def download_template():
         'Juan Pérez', '12345678', '1995-01-15', 'MASCULINO', 'GUATEMALA', 'Guatemala',
         '12345678', 'juan@email.com', 'Universitario', 'Universidad San Carlos',
         '8.5', 'Conocimientos básicos', 'Estudiante', '2000', 'Computadora propia',
-        '2', 'DESARROLLO_WEB', 'VIRTUAL', 'Tiempo completo',
+        '2', 'CIBERSEGURIDAD', 'VIRTUAL', 'Tiempo completo',
         'Quiero aprender programación', 'Ser desarrollador web'
     ])
     
@@ -727,3 +727,233 @@ def list_reaplicaciones():
         programas_disponibles=list(Programa),
         estados_disponibles=list(EstadoSolicitud),
     )
+
+@solicitantes_bp.route('/reportes', methods=['GET'])
+@login_required
+@require_role('Administrador', 'Director', 'Asistente')
+def reportes():
+    from sqlalchemy import func, extract
+    from datetime import datetime, timedelta
+    
+    # Filtros de fecha
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    
+    # Query base
+    query = Solicitante.query
+    mesesNombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+    # Aplicar filtros de fecha si existen
+    if fecha_inicio:
+        try:
+            fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+            query = query.filter(Solicitante.fecha_registro >= fecha_inicio_dt)
+        except ValueError:
+            pass
+    
+    if fecha_fin:
+        try:
+            fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d') + timedelta(days=1)
+            query = query.filter(Solicitante.fecha_registro < fecha_fin_dt)
+        except ValueError:
+            pass
+    
+    # 1. Estadísticas generales
+    total_solicitantes = query.count()
+    
+    estadisticas_estado = db.session.query(
+        Solicitante.estado,
+        func.count(Solicitante.id).label('cantidad')
+    ).filter(Solicitante.id.in_(query.with_entities(Solicitante.id))).group_by(Solicitante.estado).all()
+    
+    # 2. Distribución por programa
+    estadisticas_programa = db.session.query(
+        Solicitante.programa_solicitado,
+        func.count(Solicitante.id).label('cantidad')
+    ).filter(Solicitante.id.in_(query.with_entities(Solicitante.id))).group_by(Solicitante.programa_solicitado).all()
+    
+    # 3. Distribución por país
+    estadisticas_pais = db.session.query(
+        Solicitante.pais,
+        func.count(Solicitante.id).label('cantidad')
+    ).filter(Solicitante.id.in_(query.with_entities(Solicitante.id))).group_by(Solicitante.pais).order_by(func.count(Solicitante.id).desc()).limit(10).all()
+    
+    # 4. Distribución por género
+    estadisticas_genero = db.session.query(
+        Solicitante.genero,
+        func.count(Solicitante.id).label('cantidad')
+    ).filter(Solicitante.id.in_(query.with_entities(Solicitante.id))).group_by(Solicitante.genero).all()
+    
+    # 5. Registros por mes (últimos 12 meses)
+    registros_mensuales = db.session.query(
+        extract('year', Solicitante.fecha_registro).label('año'),
+        extract('month', Solicitante.fecha_registro).label('mes'),
+        func.count(Solicitante.id).label('cantidad')
+    ).filter(
+        Solicitante.fecha_registro >= datetime.now() - timedelta(days=365),
+        Solicitante.id.in_(query.with_entities(Solicitante.id))
+    ).group_by(
+        extract('year', Solicitante.fecha_registro),
+        extract('month', Solicitante.fecha_registro)
+    ).order_by('año', 'mes').all()
+    
+    # 6. Estadísticas de edad
+    edad_stats = db.session.query(
+        func.avg(extract('year', func.current_date()) - extract('year', Solicitante.fecha_nacimiento)).label('promedio'),
+        func.min(extract('year', func.current_date()) - extract('year', Solicitante.fecha_nacimiento)).label('minima'),
+        func.max(extract('year', func.current_date()) - extract('year', Solicitante.fecha_nacimiento)).label('maxima')
+    ).filter(Solicitante.id.in_(query.with_entities(Solicitante.id))).first()
+    
+    # 7. Promedios académicos
+    promedios_stats = db.session.query(
+        func.avg(Solicitante.promedio).label('promedio'),
+        func.min(Solicitante.promedio).label('minimo'),
+        func.max(Solicitante.promedio).label('maximo')
+    ).filter(
+        Solicitante.promedio.isnot(None),
+        Solicitante.id.in_(query.with_entities(Solicitante.id))
+    ).first()
+    
+    reaplicaciones_stats = {
+        'total_personas_con_reaplicaciones': 0,
+        'total_reaplicaciones': 0,
+        'promedio_reaplicaciones': 0
+    }
+
+    # Subconsulta para sólo los IDs que ya vienen filtrados por fecha u otros criterios
+    ids_filtrados = query.with_entities(Solicitante.id).subquery()
+
+    # Definimos una “clave de persona” que será el email si existe, o el documento en su lugar
+    grupo_persona = func.coalesce(Solicitante.emails, Solicitante.documento).label('grupo')
+
+    # 1) Agrupamos por esa clave y contamos solicitudes > 1
+    personas_multiples = (
+       db.session.query(
+        grupo_persona,
+        func.count(Solicitante.id).label('cantidad')
+        )
+        .filter(Solicitante.id.in_(ids_filtrados))
+        .group_by(grupo_persona)
+        .having(func.count(Solicitante.id) > 1)
+        .all()
+    )
+
+    # 2) Calculamos estadísticas simples
+    if personas_multiples:
+        total_personas = len(personas_multiples)
+        total_apps    = sum(p.cantidad for p in personas_multiples)
+
+        reaplicaciones_stats['total_personas_con_reaplicaciones'] = total_personas
+        reaplicaciones_stats['total_reaplicaciones']             = total_apps
+        reaplicaciones_stats['promedio_reaplicaciones']          = round(total_apps / total_personas, 1)
+    
+    return render_template('solicitantes/reportes.html',
+        total_solicitantes=total_solicitantes,
+        estadisticas_estado=estadisticas_estado,
+        estadisticas_programa=estadisticas_programa,
+        estadisticas_pais=estadisticas_pais,
+        estadisticas_genero=estadisticas_genero,
+        registros_mensuales=registros_mensuales,
+        edad_stats=edad_stats,
+        promedios_stats=promedios_stats,
+        reaplicaciones_stats=reaplicaciones_stats,
+        mesesNombres = mesesNombres,
+        filtros={
+            'fecha_inicio': fecha_inicio or '',
+            'fecha_fin': fecha_fin or ''
+        }
+    )
+
+@solicitantes_bp.route('/reportes/exportar', methods=['GET'])
+@login_required
+@require_role('Administrador', 'Director', 'Asistente')
+def exportar_reporte():
+    from flask import Response
+    import json
+    from datetime import datetime, timedelta
+    from sqlalchemy import func, extract
+    
+    # Aplicar los mismos filtros que en la ruta principal
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    formato = request.args.get('formato', 'json')  # json o csv
+    
+    query = Solicitante.query
+    
+    if fecha_inicio:
+        try:
+            fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+            query = query.filter(Solicitante.fecha_registro >= fecha_inicio_dt)
+        except ValueError:
+            pass
+    
+    if fecha_fin:
+        try:
+            fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d') + timedelta(days=1)
+            query = query.filter(Solicitante.fecha_registro < fecha_fin_dt)
+        except ValueError:
+            pass
+    
+    # Recopilar todas las estadísticas
+    total_solicitantes = query.count()
+    
+    estadisticas_estado = db.session.query(
+        Solicitante.estado,
+        func.count(Solicitante.id).label('cantidad')
+    ).filter(Solicitante.id.in_(query.with_entities(Solicitante.id))).group_by(Solicitante.estado).all()
+    
+    estadisticas_programa = db.session.query(
+        Solicitante.programa_solicitado,
+        func.count(Solicitante.id).label('cantidad')
+    ).filter(Solicitante.id.in_(query.with_entities(Solicitante.id))).group_by(Solicitante.programa_solicitado).all()
+    
+    if formato == 'json':
+        reporte = {
+            'fecha_generacion': datetime.now().isoformat(),
+            'filtros': {
+                'fecha_inicio': fecha_inicio,
+                'fecha_fin': fecha_fin
+            },
+            'total_solicitantes': total_solicitantes,
+            'distribucion_por_estado': [
+                {'estado': est.estado.value, 'cantidad': est.cantidad} for est in estadisticas_estado
+            ],
+            'distribucion_por_programa': [
+                {'programa': prog.programa_solicitado.value, 'cantidad': prog.cantidad} for prog in estadisticas_programa
+            ]
+        }
+        
+        return Response(
+            json.dumps(reporte, indent=2),
+            mimetype='application/json',
+            headers={"Content-Disposition": f"attachment;filename=reporte_solicitantes_{datetime.now().strftime('%Y%m%d_%H%M')}.json"}
+        )
+    
+    else:  # CSV
+        import csv
+        from io import StringIO
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Escribir estadísticas por estado
+        writer.writerow(['DISTRIBUCIÓN POR ESTADO'])
+        writer.writerow(['Estado', 'Cantidad'])
+        for est in estadisticas_estado:
+            writer.writerow([est.estado.value, est.cantidad])
+        
+        writer.writerow([])  # Línea vacía
+        
+        # Escribir estadísticas por programa
+        writer.writerow(['DISTRIBUCIÓN POR PROGRAMA'])
+        writer.writerow(['Programa', 'Cantidad'])
+        for prog in estadisticas_programa:
+            writer.writerow([prog.programa_solicitado.value, prog.cantidad])
+        
+        output.seek(0)
+        
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={"Content-Disposition": f"attachment;filename=reporte_solicitantes_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"}
+        )
