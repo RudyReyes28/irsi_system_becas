@@ -97,6 +97,8 @@ Las migraciones ya están generadas bajo `migrations/versions`. Para aplicar:
 flask db upgrade
 ```
 
+En caso de error de preferencia partir desde cero
+
 > **Si partes de cero** (base vacía, quieres regenerar):
 > ```bash
 > rm -rf migrations/versions/*
@@ -125,7 +127,7 @@ export FLASK_APP=run.py
 export FLASK_ENV=development   # hot‑reload & debug
 flask run
 o
-python run
+python run.py
 ```
 
 Accede en tu navegador a:  http://localhost:5000
