@@ -321,6 +321,14 @@
                     <i class="bi bi-person-plus"></i>
                     Nuevo Solicitante
                   </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('solicitantes.import_csv') }}">
+                      <i class="bi bi-file-earmark-spreadsheet"></i>
+                      Importar CSV
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('solicitantes.list_reaplicaciones') }}">
+                        <i class="bi bi-arrow-repeat"></i>
+                        Ver Reaplicaciones
+                      </a></li>
                 </ul>
               </li>
 
@@ -332,9 +340,20 @@
                 </a>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="{{ url_for('becados.list_becados') }}">
-                    <i class="bi bi-list-ul"></i>
-                    Listar Becados
-                  </a></li>
+                      <i class="bi bi-list-ul"></i>
+                      Becados Activos
+                    </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('becados.list_all_becados') }}">
+                      <i class="bi bi-grid-3x3-gap"></i>
+                      Todos los Becados
+                    </a></li>
+                  <li>
+                    <hr class="dropdown-divider">
+                  </li>
+                  <li><a class="dropdown-item" href="{{ url_for('becados.list_aprobados') }}">
+                      <i class="bi bi-person-check"></i>
+                      Solicitantes Aprobados
+                    </a></li>
                 </ul>
               </li>
 

@@ -2,6 +2,8 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
+from sqlalchemy import func, or_
+from app.models.enums import Programa
 from app.models.solicitante import Solicitante
 from app.models.historial_estado import HistorialEstado
 from app.forms.solicitante_forms import SolicitanteForm
@@ -452,3 +454,276 @@ def obtener_documentos_ajax(solicitante_id):
         },
         'documentos': documentos
     })
+
+
+@solicitantes_bp.route('/import-csv', methods=['GET', 'POST'])
+@login_required
+@require_role('Administrador', 'Asistente')
+def import_csv():
+    if request.method == 'POST':
+        # Verificar que se subió un archivo
+        if 'csv_file' not in request.files:
+            flash('No se seleccionó ningún archivo', 'danger')
+            return redirect(request.url)
+        
+        file = request.files['csv_file']
+        if file.filename == '':
+            flash('No se seleccionó ningún archivo', 'danger')
+            return redirect(request.url)
+        
+        if not file.filename.lower().endswith('.csv'):
+            flash('Solo se permiten archivos CSV', 'danger')
+            return redirect(request.url)
+        
+        try:
+            import csv
+            import io
+            from app.models.enums import Genero, Pais, Programa, Modalidad
+            
+            # Leer el archivo CSV
+            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            csv_reader = csv.DictReader(stream)
+            
+            importados = 0
+            errores = []
+            
+            for row_num, row in enumerate(csv_reader, start=2):  # Empezar en 2 porque la fila 1 son headers
+                try:
+                    # Validar campos obligatorios
+                    campos_obligatorios = ['nombre', 'documento', 'fecha_nacimiento', 'genero', 'pais', 'ciudad', 'nivel_educativo', 'institucion', 'programa_solicitado', 'modalidad']
+                    for campo in campos_obligatorios:
+                        if not row.get(campo, '').strip():
+                            raise ValueError(f"Campo obligatorio '{campo}' está vacío")
+                    
+                    # Convertir fecha de nacimiento
+                    try:
+                        fecha_nac = datetime.strptime(row['fecha_nacimiento'], '%Y-%m-%d').date()
+                    except ValueError:
+                        try:
+                            fecha_nac = datetime.strptime(row['fecha_nacimiento'], '%d/%m/%Y').date()
+                        except ValueError:
+                            raise ValueError("Formato de fecha inválido. Use YYYY-MM-DD o DD/MM/YYYY")
+                    
+                    # Convertir enums
+                    try:
+                        genero = Genero[row['genero'].upper()]
+                    except KeyError:
+                        raise ValueError(f"Género inválido: {row['genero']}")
+                    
+                    try:
+                        pais = Pais[row['pais'].upper()]
+                    except KeyError:
+                        raise ValueError(f"País inválido: {row['pais']}")
+                    
+                    try:
+                        programa = Programa[row['programa_solicitado'].upper()]
+                    except KeyError:
+                        raise ValueError(f"Programa inválido: {row['programa_solicitado']}")
+                    
+                    try:
+                        modalidad = Modalidad[row['modalidad'].upper()]
+                    except KeyError:
+                        raise ValueError(f"Modalidad inválida: {row['modalidad']}")
+                    
+                    # Verificar si ya existe
+                    existe = Solicitante.query.filter(
+                        (Solicitante.documento == row['documento']) |
+                        (Solicitante.emails == row.get('emails', ''))
+                    ).first()
+                    
+                    if existe:
+                        errores.append(f"Fila {row_num}: Ya existe un solicitante con documento {row['documento']} o email {row.get('emails', '')}")
+                        continue
+                    
+                    # Crear nuevo solicitante
+                    solicitante = Solicitante(
+                        nombre=row['nombre'].strip(),
+                        documento=row['documento'].strip(),
+                        fecha_nacimiento=fecha_nac,
+                        genero=genero,
+                        pais=pais,
+                        ciudad=row['ciudad'].strip(),
+                        telefonos=row.get('telefonos', '').strip(),
+                        emails=row.get('emails', '').strip(),
+                        nivel_educativo=row['nivel_educativo'].strip(),
+                        institucion=row['institucion'].strip(),
+                        promedio=float(row['promedio']) if row.get('promedio', '').strip() else None,
+                        experiencia_tech=row.get('experiencia_tech', '').strip(),
+                        situacion_laboral=row.get('situacion_laboral', '').strip(),
+                        ingresos=float(row['ingresos']) if row.get('ingresos', '').strip() else None,
+                        acceso_tecnologia=row.get('acceso_tecnologia', '').strip(),
+                        dependientes=int(row['dependientes']) if row.get('dependientes', '').strip() else None,
+                        programa_solicitado=programa,
+                        modalidad=modalidad,
+                        disponibilidad=row.get('disponibilidad', '').strip(),
+                        motivacion=row.get('motivacion', '').strip(),
+                        objetivos=row.get('objetivos', '').strip(),
+                        estado=EstadoSolicitud.EN_REVISION,
+                        fecha_registro=datetime.utcnow(),
+                        fecha_actualizacion=datetime.utcnow()
+                    )
+                    
+                    db.session.add(solicitante)
+                    db.session.commit()
+                    
+                    # Crear historial de estado
+                    cambiar_estado_solicitante(solicitante.id, EstadoSolicitud.EN_REVISION, current_user.id, "Importado desde CSV")
+                    
+                    importados += 1
+                    
+                except Exception as e:
+                    errores.append(f"Fila {row_num}: {str(e)}")
+                    db.session.rollback()
+                    continue
+            
+            # Mostrar resultados
+            if importados > 0:
+                flash(f'Se importaron {importados} solicitantes exitosamente', 'success')
+            
+            if errores:
+                flash(f'Se encontraron {len(errores)} errores:', 'warning')
+                for error in errores[:10]:  # Mostrar solo los primeros 10 errores
+                    flash(error, 'danger')
+                if len(errores) > 10:
+                    flash(f'... y {len(errores) - 10} errores más', 'danger')
+            
+            return redirect(url_for('solicitantes.list_solicitantes'))
+            
+        except Exception as e:
+            flash(f'Error al procesar el archivo: {str(e)}', 'danger')
+            return redirect(request.url)
+    
+    return render_template('solicitantes/import_csv.html')
+
+
+@solicitantes_bp.route('/download-template')
+@login_required
+@require_role('Administrador', 'Asistente')
+def download_template():
+    import csv
+    from flask import Response
+    from io import StringIO
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Encabezados de ejemplo
+    headers = [
+        'nombre', 'documento', 'fecha_nacimiento', 'genero', 'pais', 'ciudad',
+        'telefonos', 'emails', 'nivel_educativo', 'institucion', 'promedio',
+        'experiencia_tech', 'situacion_laboral', 'ingresos', 'acceso_tecnologia',
+        'dependientes', 'programa_solicitado', 'modalidad', 'disponibilidad',
+        'motivacion', 'objetivos'
+    ]
+    
+    writer.writerow(headers)
+    
+    # Fila de ejemplo
+    writer.writerow([
+        'Juan Pérez', '12345678', '1995-01-15', 'MASCULINO', 'GUATEMALA', 'Guatemala',
+        '12345678', 'juan@email.com', 'Universitario', 'Universidad San Carlos',
+        '8.5', 'Conocimientos básicos', 'Estudiante', '2000', 'Computadora propia',
+        '2', 'DESARROLLO_WEB', 'VIRTUAL', 'Tiempo completo',
+        'Quiero aprender programación', 'Ser desarrollador web'
+    ])
+    
+    output.seek(0)
+    
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={"Content-Disposition": "attachment;filename=plantilla_solicitantes.csv"}
+    )
+
+
+@solicitantes_bp.route('/reaplicaciones', methods=['GET'])
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def list_reaplicaciones():
+    # 1) Traigo todas las solicitudes ordenadas
+    todos = (
+        Solicitante.query
+        .order_by(Solicitante.fecha_registro.asc())
+        .all()
+    )
+
+    # 2) Formo clusters “union-find–light” en memoria:
+    clusters: list[list[Solicitante]] = []
+    for s in todos:
+        colocado = False
+        for grupo in clusters:
+            # si coincide email CON ALGUNO del grupo o documento CON ALGUNO
+            if (s.emails and any(s.emails == otro.emails for otro in grupo)) \
+            or (s.documento and any(s.documento == otro.documento for otro in grupo)):
+                grupo.append(s)
+                colocado = True
+                break
+        if not colocado:
+            clusters.append([s])
+
+    # 3) Me quedo sólo con los clusters de 2+ solicitudes
+    clusters = [g for g in clusters if len(g) > 1]
+
+    # 4) (Opcional) Aplico filtros de mínimos, programa y estado igual que antes…
+    min_apps = request.args.get('min_aplicaciones', type=int)
+    if min_apps:
+        clusters = [g for g in clusters if len(g) >= min_apps]
+
+    prog = request.args.get('programa', '')
+    if prog:
+        try:
+            pe = Programa[prog]
+            clusters = [
+                [s for s in g if s.programa_solicitado == pe]
+                for g in clusters
+            ]
+            clusters = [g for g in clusters if len(g) > 1]
+        except KeyError:
+            pass
+
+    est = request.args.get('estado', '')
+    if est:
+        try:
+            ee = EstadoSolicitud[est]
+            clusters = [
+                [s for s in g if s.estado == ee]
+                for g in clusters
+            ]
+            clusters = [g for g in clusters if len(g) > 1]
+        except KeyError:
+            pass
+
+    # 5) Preparo la lista para la plantilla
+    reaplicaciones = []
+    total_apps = 0
+    for grupo in clusters:
+        ordenado = sorted(grupo, key=lambda x: x.fecha_registro)
+        total_apps += len(ordenado)
+        reaplicaciones.append({
+            'nombre':             ordenado[0].nombre,
+            'email':              ordenado[0].emails,
+            'documento':          ordenado[0].documento,
+            'aplicaciones':       ordenado,
+            'primera_aplicacion': ordenado[0],
+            'ultima_aplicacion':  ordenado[-1],
+            'total_aplicaciones': len(ordenado),
+        })
+
+    total_personas       = len(reaplicaciones)
+    promedio_reaplicaciones = round(total_apps / total_personas, 1) if total_personas else 0
+    max_reaplicaciones     = max((r['total_aplicaciones'] for r in reaplicaciones), default=0)
+
+    return render_template('solicitantes/reaplicaciones.html',
+        reaplicaciones=reaplicaciones,
+        filtros={
+          'min_aplicaciones': request.args.get('min_aplicaciones',''),
+          'programa': request.args.get('programa',''),
+          'estado':   request.args.get('estado',''),
+        },
+        total_personas=total_personas,
+        total_aplicaciones=total_apps,
+        promedio_reaplicaciones=promedio_reaplicaciones,
+        max_reaplicaciones=max_reaplicaciones,
+        programas_disponibles=list(Programa),
+        estados_disponibles=list(EstadoSolicitud),
+    )

@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.utils.authorization import require_role
@@ -64,3 +65,38 @@ def list_aprobados():
     from app.services.becados_service import obtener_solicitantes_aprobados
     aprobados = obtener_solicitantes_aprobados()
     return render_template('becados/approved.html', aprobados=aprobados)
+
+
+@becados_bp.route('/todos', methods=['GET'])
+@login_required
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
+def list_all_becados():
+    """
+    Vista para mostrar todos los becados sin importar su estado,
+    con filtros avanzados
+    """
+    # Obtener parámetros de filtro
+    search = request.args.get('search', '')
+    estado = request.args.get('estado', '')
+    cohorte = request.args.get('cohorte', '')
+    modalidad = request.args.get('modalidad', '')
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    
+    # Obtener todos los becados con filtros
+    from app.services.becados_service import obtener_todos_los_becados_con_filtros
+    becados = obtener_todos_los_becados_con_filtros(
+        search=search,
+        estado=estado,
+        cohorte=cohorte,
+        modalidad=modalidad,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta
+    )
+
+    hoy = date.today()
+    for b in becados:
+        # suponemos que b.fecha_inicio es un date
+        b.dias_transcurridos = (hoy - b.fecha_inicio).days
+    
+    return render_template('becados/all_becados.html', becados=becados)

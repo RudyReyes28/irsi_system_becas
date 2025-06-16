@@ -118,3 +118,49 @@ def obtener_solicitantes_aprobados():
     return Solicitante.query.filter(
         Solicitante.estado == EstadoSolicitud.APROBADO
     ).order_by(Solicitante.fecha_registro.desc()).all()
+
+# Agregar esta función a tu becados_service.py
+
+def obtener_todos_los_becados_con_filtros(search=None, estado=None, cohorte=None, 
+                                         modalidad=None, fecha_desde=None, fecha_hasta=None):
+    """
+    Obtiene todos los becados con filtros opcionales
+    """
+    from app.models.becado import Becado
+    from app.models.solicitante import Solicitante
+    from datetime import datetime
+    
+    # Query base
+    query = db.session.query(Becado).join(Solicitante)
+    
+    # Aplicar filtros
+    if search:
+        query = query.filter(
+            db.or_(
+                Solicitante.nombre.ilike(f'%{search}%'),
+                Solicitante.documento.ilike(f'%{search}%'),
+                Becado.id.like(f'%{search}%')
+            )
+        )
+    
+    if estado:
+        from app.models.enums import EstadoBeca
+        query = query.filter(Becado.estado == EstadoBeca[estado])
+    
+    if cohorte:
+        query = query.filter(Becado.cohorte == cohorte)
+    
+    if modalidad:
+        from app.models.enums import Modalidad
+        query = query.filter(Becado.modalidad == Modalidad[modalidad])
+    
+    if fecha_desde:
+        fecha_desde_obj = datetime.strptime(fecha_desde, '%Y-%m-%d').date()
+        query = query.filter(Becado.fecha_inicio >= fecha_desde_obj)
+    
+    if fecha_hasta:
+        fecha_hasta_obj = datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+        query = query.filter(Becado.fecha_inicio <= fecha_hasta_obj)
+    
+    # Ordenar por fecha de inicio descendente
+    return query.order_by(Becado.fecha_inicio.desc()).all()

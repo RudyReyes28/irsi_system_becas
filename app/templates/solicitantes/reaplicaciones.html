@@ -1,0 +1,319 @@
+<!-- templates/solicitantes/reaplicaciones.html -->
+{% extends "base.html" %}
+
+{% block title %}Lista de Reaplicaciones - IRSI Becas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-1">
+            <i class="bi bi-arrow-repeat text-warning me-2"></i>
+            Lista de Reaplicaciones
+          </h1>
+          <p class="text-muted mb-0">Solicitantes que han aplicado múltiples veces</p>
+        </div>
+        <div>
+          <a href="{{ url_for('solicitantes.list_solicitantes') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver a Solicitantes
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-3">
+              <div class="d-flex align-items-center justify-content-center">
+                <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                  <i class="bi bi-people-fill text-primary fs-4"></i>
+                </div>
+                <div>
+                  <h4 class="mb-0 text-primary">{{ total_personas }}</h4>
+                  <small class="text-muted">Personas con reaplicaciones</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="d-flex align-items-center justify-content-center">
+                <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                  <i class="bi bi-arrow-repeat text-warning fs-4"></i>
+                </div>
+                <div>
+                  <h4 class="mb-0 text-warning">{{ total_aplicaciones }}</h4>
+                  <small class="text-muted">Total de aplicaciones</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="d-flex align-items-center justify-content-center">
+                <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                  <i class="bi bi-calculator text-info fs-4"></i>
+                </div>
+                <div>
+                  <h4 class="mb-0 text-info">{{ promedio_reaplicaciones }}</h4>
+                  <small class="text-muted">Promedio por persona</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="d-flex align-items-center justify-content-center">
+                <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                  <i class="bi bi-trophy text-success fs-4"></i>
+                </div>
+                <div>
+                  <h4 class="mb-0 text-success">{{ max_reaplicaciones }}</h4>
+                  <small class="text-muted">Máximo de reaplicaciones</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form method="GET" class="row g-3">
+            <div class="col-md-4">
+              <label for="min_aplicaciones" class="form-label">Mínimo de aplicaciones</label>
+              <select name="min_aplicaciones" id="min_aplicaciones" class="form-select">
+                <option value="">Todas</option>
+                <option value="2" {{ 'selected' if filtros.min_aplicaciones == '2' }}>2 o más</option>
+                <option value="3" {{ 'selected' if filtros.min_aplicaciones == '3' }}>3 o más</option>
+                <option value="4" {{ 'selected' if filtros.min_aplicaciones == '4' }}>4 o más</option>
+                <option value="5" {{ 'selected' if filtros.min_aplicaciones == '5' }}>5 o más</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="programa" class="form-label">Programa</label>
+              <select name="programa" id="programa" class="form-select">
+                <option value="">Todos los programas</option>
+                {% for programa in programas_disponibles %}
+                  <option value="{{ programa.name }}" {{ 'selected' if filtros.programa == programa.name }}>
+                    {{ programa.name.replace('_', ' ').title() }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="estado" class="form-label">Estado actual</label>
+              <select name="estado" id="estado" class="form-select">
+                <option value="">Todos los estados</option>
+                {% for estado in estados_disponibles %}
+                  <option value="{{ estado.name }}" {{ 'selected' if filtros.estado == estado.name }}>
+                    {{ estado.name.replace('_', ' ').title() }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-irsi-primary">
+                <i class="bi bi-search"></i>
+                Filtrar
+              </button>
+              <a href="{{ url_for('solicitantes.list_reaplicaciones') }}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-x-circle"></i>
+                Limpiar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Reaplicaciones -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul me-2"></i>
+              Reaplicaciones encontradas
+            </h5>
+            <span class="badge bg-primary rounded-pill">{{ reaplicaciones|length }} grupos</span>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          {% if reaplicaciones %}
+            {% for grupo in reaplicaciones %}
+              <div class="border-bottom">
+                <div class="p-4">
+                  <!-- Header del grupo -->
+                  <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                      <div class="rounded-circle bg-warning bg-opacity-10 p-2 me-3">
+                        <i class="bi bi-person-fill text-warning"></i>
+                      </div>
+                      <div>
+                        <h6 class="mb-1">{{ grupo.nombre }}</h6>
+                        <div class="d-flex gap-3 text-muted small">
+                          <span><i class="bi bi-envelope me-1"></i>{{ grupo.email }}</span>
+                          <span><i class="bi bi-card-text me-1"></i>{{ grupo.documento }}</span>
+                          <span><i class="bi bi-arrow-repeat me-1"></i>{{ grupo.aplicaciones|length }} aplicaciones</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge bg-{{ 'success' if grupo.ultima_aplicacion.estado.name == 'APROBADO' 
+                                           else 'danger' if grupo.ultima_aplicacion.estado.name == 'RECHAZADO'
+                                           else 'warning' if grupo.ultima_aplicacion.estado.name == 'EN_REVISION'
+                                           else 'secondary' }} rounded-pill">
+                        {{ grupo.ultima_aplicacion.estado.name.replace('_', ' ').title() }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Timeline de aplicaciones -->
+                  <div class="ms-5">
+                    <div class="row">
+                      <div class="col-12">
+                        <div class="timeline-container">
+                          {% for app in grupo.aplicaciones %}
+                            <div class="d-flex align-items-center mb-2 {{ 'opacity-75' if not loop.last }}">
+                              <div class="timeline-dot me-3">
+                                <div class="rounded-circle {{ 'bg-primary' if loop.last else 'bg-secondary' }} p-1">
+                                  <div class="rounded-circle bg-white" style="width: 6px; height: 6px;"></div>
+                                </div>
+                              </div>
+                              <div class="flex-grow-1">
+                                <div class="row align-items-center">
+                                  <div class="col-md-3">
+                                    <small class="text-muted">
+                                      {{ app.fecha_registro.strftime('%d/%m/%Y') }}
+                                    </small>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <span class="badge bg-light text-dark">
+                                      {{ app.programa_legible }}
+                                    </span>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <span class="badge bg-{{ 'success' if app.estado.name == 'APROBADO' 
+                                                             else 'danger' if app.estado.name == 'RECHAZADO'
+                                                             else 'warning' if app.estado.name == 'EN_REVISION'
+                                                             else 'secondary' }}">
+                                      {{ app.estado_legible }}
+                                    </span>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <small class="text-muted">{{ app.pais.name if app.pais else '-' }}</small>
+                                  </div>
+                                  <div class="col-md-2 text-end">
+                                    <div class="btn-group btn-group-sm">
+                                      <a href="{{ url_for('solicitantes.detail_solicitante', solicitante_id=app.id) }}" 
+                                         class="btn btn-outline-primary btn-sm" title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                      </a>
+                                      {% if grupo.aplicaciones|length > 1 %}
+                                        <a href="{{ url_for('solicitantes.compare_solicitante', solicitante_id=app.id) }}" 
+                                           class="btn btn-outline-info btn-sm" title="Comparar">
+                                          <i class="bi bi-arrow-left-right"></i>
+                                        </a>
+                                      {% endif %}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Información adicional -->
+                  <div class="ms-5 mt-3">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <small class="text-muted">
+                          <i class="bi bi-calendar-range me-1"></i>
+                          Primera aplicación: {{ grupo.primera_aplicacion.fecha_registro.strftime('%d/%m/%Y') }}
+                        </small>
+                      </div>
+                      <div class="col-md-6 text-end">
+                        <small class="text-muted">
+                          <i class="bi bi-calendar-check me-1"></i>
+                          Última aplicación: {{ grupo.ultima_aplicacion.fecha_registro.strftime('%d/%m/%Y') }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="p-5 text-center">
+              <div class="mb-4">
+                <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+              </div>
+              <h5 class="text-muted mb-2">No se encontraron reaplicaciones</h5>
+              <p class="text-muted">No hay solicitantes que cumplan con los criterios de búsqueda.</p>
+              <a href="{{ url_for('solicitantes.list_reaplicaciones') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                Ver todas las reaplicaciones
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.timeline-container {
+  position: relative;
+}
+
+.timeline-dot {
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-container .d-flex:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 30px;
+  width: 2px;
+  height: 20px;
+  background-color: #dee2e6;
+  z-index: 0;
+}
+
+.card:hover {
+  transform: none !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Funcionalidad adicional si es necesaria
+document.addEventListener('DOMContentLoaded', function() {
+    // Tooltip para botones
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,873 @@
+{% extends 'base.html' %}
+{% block title %}Todos los Becados - IRSI Becas{% endblock %}
+
+{% block head %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    color: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 2;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  }
+
+  .stat-card.activo { border-left-color: #10b981; }
+  .stat-card.en-pausa { border-left-color: #f59e0b; }
+  .stat-card.desertor { border-left-color: #ef4444; }
+  .stat-card.graduado { border-left-color: #8b5cf6; }
+  .stat-card.suspendido { border-left-color: #6b7280; }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-card.activo .stat-number { color: #10b981; }
+  .stat-card.en-pausa .stat-number { color: #f59e0b; }
+  .stat-card.desertor .stat-number { color: #ef4444; }
+  .stat-card.graduado .stat-number { color: #8b5cf6; }
+  .stat-card.suspendido .stat-number { color: #6b7280; }
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: var(--irsi-gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .search-section {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .advanced-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--irsi-dark);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .form-label i {
+    margin-right: 0.5rem;
+    color: var(--irsi-secondary);
+  }
+
+  .form-control, .form-select {
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: var(--irsi-secondary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .table-container {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .table-modern thead {
+    background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));
+    color: white;
+  }
+
+  .table-modern thead th {
+    border: none;
+    padding: 1.2rem 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+  }
+
+  .table-modern tbody tr {
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .table-modern tbody tr:hover {
+    background-color: var(--irsi-light);
+    transform: scale(1.005);
+  }
+
+  .table-modern tbody td {
+    padding: 1.2rem 1rem;
+    border: none;
+    vertical-align: middle;
+    font-size: 0.9rem;
+  }
+
+  .student-info {
+    display: flex;
+    align-items: center;
+  }
+
+  .student-avatar {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-weight: 600;
+    color: white;
+    font-size: 1.1rem;
+  }
+
+  .student-details h6 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--irsi-dark);
+    font-size: 0.95rem;
+  }
+
+  .student-details small {
+    color: var(--irsi-gray);
+    font-size: 0.8rem;
+  }
+
+  .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .status-badge i {
+    margin-right: 0.5rem;
+  }
+
+  .status-activo {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+  }
+
+  .status-en-pausa {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+  }
+
+  .status-desertor {
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    color: white;
+  }
+
+  .status-graduado {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    color: white;
+  }
+
+  .status-suspendido {
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
+    color: white;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-action i {
+    margin-right: 0.3rem;
+  }
+
+  .btn-view {
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-accent));
+    color: white;
+  }
+
+  .btn-view:hover {
+    background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary));
+    transform: translateY(-2px);
+    color: white;
+  }
+
+  .btn-edit {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+  }
+
+  .btn-edit:hover {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    transform: translateY(-2px);
+    color: white;
+  }
+
+  .progress-info {
+    font-size: 0.8rem;
+    color: var(--irsi-gray);
+  }
+
+  .pagination-container {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--irsi-gray);
+  }
+
+  .empty-state i {
+    font-size: 5rem;
+    margin-bottom: 1.5rem;
+    color: var(--irsi-secondary);
+    opacity: 0.5;
+  }
+
+  .toolbar {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .toolbar-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .view-options {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .view-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--irsi-secondary);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--irsi-secondary);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .view-btn.active,
+  .view-btn:hover {
+    background: var(--irsi-secondary);
+    color: white;
+  }
+
+  .export-dropdown .dropdown-menu {
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  @media (max-width: 768px) {
+    .page-header h1 {
+      font-size: 2rem;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .advanced-filters {
+      grid-template-columns: 1fr;
+    }
+    
+    .toolbar-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .action-buttons {
+      flex-direction: column;
+    }
+    
+    .view-options {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .student-info {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .student-avatar {
+      margin-right: 0;
+      margin-bottom: 0.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1><i class="bi bi-mortarboard me-3"></i>Todos los Becados</h1>
+        <p class="page-subtitle mb-0">Vista completa de todos los estudiantes becados con sus diferentes estados</p>
+      </div>
+      <div class="col-md-4 text-end">
+        <a href="{{ url_for('becados.list_becados') }}" class="btn btn-light btn-lg">
+          <i class="bi bi-arrow-left me-2"></i>
+          Solo Activos
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card activo">
+      <div class="stat-number">{{ becados|selectattr('estado.name', 'equalto', 'ACTIVO')|list|length }}</div>
+      <div class="stat-label">
+        <i class="bi bi-play-circle me-1"></i>Activos
+      </div>
+    </div>
+    <div class="stat-card en-pausa">
+      <div class="stat-number">{{ becados|selectattr('estado.name', 'equalto', 'EN_PAUSA')|list|length }}</div>
+      <div class="stat-label">
+        <i class="bi bi-pause-circle me-1"></i>En Pausa
+      </div>
+    </div>
+    <div class="stat-card desertor">
+      <div class="stat-number">{{ becados|selectattr('estado.name', 'equalto', 'DESERTOR')|list|length }}</div>
+      <div class="stat-label">
+        <i class="bi bi-x-circle me-1"></i>Desertores
+      </div>
+    </div>
+    <div class="stat-card graduado">
+      <div class="stat-number">{{ becados|selectattr('estado.name', 'equalto', 'GRADUADO')|list|length }}</div>
+      <div class="stat-label">
+        <i class="bi bi-award me-1"></i>Graduados
+      </div>
+    </div>
+    <div class="stat-card suspendido">
+      <div class="stat-number">{{ becados|selectattr('estado.name', 'equalto', 'SUSPENDIDO')|list|length }}</div>
+      <div class="stat-label">
+        <i class="bi bi-ban me-1"></i>Suspendidos
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-actions">
+      <div class="d-flex align-items-center">
+        <h5 class="mb-0 me-3">
+          <i class="bi bi-funnel me-2"></i>Filtros y Opciones
+        </h5>
+        <span class="badge bg-primary fs-6">{{ becados|length }} registros</span>
+      </div>
+      <div class="d-flex gap-2">
+        {% if current_user.rol in ['Administrador', 'Director'] %}
+          <div class="dropdown export-dropdown">
+            <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <i class="bi bi-download me-2"></i>Exportar
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" onclick="exportData('excel')">
+                <i class="bi bi-file-earmark-excel me-2"></i>Excel
+              </a></li>
+              <li><a class="dropdown-item" href="#" onclick="exportData('pdf')">
+                <i class="bi bi-file-earmark-pdf me-2"></i>PDF
+              </a></li>
+              <li><a class="dropdown-item" href="#" onclick="exportData('csv')">
+                <i class="bi bi-file-earmark-text me-2"></i>CSV
+              </a></li>
+            </ul>
+          </div>
+        {% endif %}
+        <div class="view-options">
+          <a href="#" class="view-btn active" data-view="table">
+            <i class="bi bi-table me-1"></i>Tabla
+          </a>
+          <a href="#" class="view-btn" data-view="cards">
+            <i class="bi bi-grid me-1"></i>Tarjetas
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Search and Filters -->
+  <div class="search-section">
+    <form method="GET" class="needs-validation" novalidate>
+      <div class="advanced-filters">
+        <div class="filter-group">
+          <label for="search" class="form-label">
+            <i class="bi bi-search"></i>Buscar estudiante
+          </label>
+          <input type="text" class="form-control" id="search" name="search" 
+                 placeholder="Nombre, ID o documento..." value="{{ request.args.get('search', '') }}">
+        </div>
+        
+        <div class="filter-group">
+          <label for="estado" class="form-label">
+            <i class="bi bi-funnel"></i>Estado
+          </label>
+          <select class="form-select" id="estado" name="estado">
+            <option value="">Todos los estados</option>
+            <option value="ACTIVO" {{ 'selected' if request.args.get('estado') == 'ACTIVO' }}>
+              <i class="bi bi-play-circle"></i> Activo
+            </option>
+            <option value="EN_PAUSA" {{ 'selected' if request.args.get('estado') == 'EN_PAUSA' }}>
+              En Pausa
+            </option>
+            <option value="DESERTOR" {{ 'selected' if request.args.get('estado') == 'DESERTOR' }}>
+              Desertor
+            </option>
+            <option value="GRADUADO" {{ 'selected' if request.args.get('estado') == 'GRADUADO' }}>
+              Graduado
+            </option>
+            <option value="SUSPENDIDO" {{ 'selected' if request.args.get('estado') == 'SUSPENDIDO' }}>
+              Suspendido
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="cohorte" class="form-label">
+            <i class="bi bi-calendar-event"></i>Cohorte
+          </label>
+          <select class="form-select" id="cohorte" name="cohorte">
+            <option value="">Todas las cohortes</option>
+            {% for cohorte in becados|map(attribute='cohorte')|unique|sort %}
+              <option value="{{ cohorte }}" {{ 'selected' if request.args.get('cohorte') == cohorte }}>
+                {{ cohorte }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="modalidad" class="form-label">
+            <i class="bi bi-laptop"></i>Modalidad
+          </label>
+          <select class="form-select" id="modalidad" name="modalidad">
+            <option value="">Todas las modalidades</option>
+            <option value="PRESENCIAL" {{ 'selected' if request.args.get('modalidad') == 'PRESENCIAL' }}>
+              Presencial
+            </option>
+            <option value="VIRTUAL" {{ 'selected' if request.args.get('modalidad') == 'VIRTUAL' }}>
+              Virtual
+            </option>
+            <option value="MIXTA" {{ 'selected' if request.args.get('modalidad') == 'MIXTA' }}>
+              Mixta
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="fecha_desde" class="form-label">
+            <i class="bi bi-calendar-range"></i>Fecha desde
+          </label>
+          <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
+                 value="{{ request.args.get('fecha_desde', '') }}">
+        </div>
+
+        <div class="filter-group">
+          <label for="fecha_hasta" class="form-label">
+            <i class="bi bi-calendar-range"></i>Fecha hasta
+          </label>
+          <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" 
+                 value="{{ request.args.get('fecha_hasta', '') }}">
+        </div>
+
+        <div class="filter-group">
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-irsi-primary flex-grow-1">
+              <i class="bi bi-search me-2"></i>Buscar
+            </button>
+            <a href="{{ url_for('becados.list_all_becados') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-clockwise"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table View -->
+  {% if becados %}
+    <div class="table-container" id="table-view">
+      <div class="table-responsive">
+        <table class="table table-modern">
+          <thead>
+            <tr>
+              <th>
+                <div class="d-flex align-items-center">
+                  <input type="checkbox" id="selectAll" class="form-check-input me-2">
+                  Estudiante
+                </div>
+              </th>
+              <th>Cohorte</th>
+              <th>Estado</th>
+              <th>Modalidad</th>
+              <th>Fecha Inicio</th>
+              <th>Sede</th>
+              <th>Progreso</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for becado in becados %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <input type="checkbox" class="form-check-input me-3" value="{{ becado.id }}">
+                  <div class="student-info">
+                    <div class="student-avatar">
+                      {{ becado.solicitante.nombre.split()[0][0] }}{{ becado.solicitante.nombre.split()[-1][0] if becado.solicitante.nombre.split()|length > 1 }}
+                    </div>
+                    <div class="student-details">
+                      <h6>{{ becado.solicitante.nombre }}</h6>
+                      <small>ID: {{ becado.id }} | {{ becado.solicitante.documento or 'Sin documento' }}</small>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-primary fs-6">{{ becado.cohorte }}</span>
+              </td>
+              <td>
+                <span class="status-badge status-{{ becado.estado.name.lower().replace('_', '-') }}">
+                  {% if becado.estado.name == 'ACTIVO' %}
+                    <i class="bi bi-play-circle"></i>
+                  {% elif becado.estado.name == 'EN_PAUSA' %}
+                    <i class="bi bi-pause-circle"></i>
+                  {% elif becado.estado.name == 'DESERTOR' %}
+                    <i class="bi bi-x-circle"></i>
+                  {% elif becado.estado.name == 'GRADUADO' %}
+                    <i class="bi bi-award"></i>
+                  {% elif becado.estado.name == 'SUSPENDIDO' %}
+                    <i class="bi bi-ban"></i>
+                  {% endif %}
+                  {{ becado.estado.value }}
+                </span>
+              </td>
+              <td>
+                <i class="bi bi-{{ 'laptop' if becado.modalidad and becado.modalidad.name == 'VIRTUAL' else 'building' if becado.modalidad and becado.modalidad.name == 'PRESENCIAL' else 'hybrid' }} me-2"></i>
+                {{ becado.modalidad.value if becado.modalidad else 'N/A' }}
+              </td>
+              <td>
+                <div class="d-flex flex-column">
+                  <span><i class="bi bi-calendar-event me-2 text-muted"></i>{{ becado.fecha_inicio.strftime('%d/%m/%Y') }}</span>
+                  <small class="text-muted">
+                    {{ becado.dias_transcurridos }} días
+                    </small>
+                </div>
+              </td>
+              <td>
+                <i class="bi bi-geo-alt me-2 text-muted"></i>
+                {{ becado.sede or 'N/A' }}
+              </td>
+              <td>
+                <div class="progress-info">
+                  {% if becado.estado.name == 'GRADUADO' %}
+                    <div class="progress mb-1" style="height: 8px;">
+                      <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
+                    <small class="text-success">Completado</small>
+                  {% elif becado.estado.name == 'ACTIVO' %}
+                    <div class="progress mb-1" style="height: 8px;">
+                      <div class="progress-bar bg-primary" style="width: 60%"></div>
+                    </div>
+                    <small class="text-primary">En progreso</small>
+                  {% elif becado.estado.name == 'EN_PAUSA' %}
+                    <div class="progress mb-1" style="height: 8px;">
+                      <div class="progress-bar bg-warning" style="width: 40%"></div>
+                    </div>
+                    <small class="text-warning">Pausado</small>
+                  {% else %}
+                    <small class="text-muted">{{ becado.estado.value }}</small>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a href="{{ url_for('becados.detail_becado', becado_id=becado.id) }}" 
+                     class="btn-action btn-view" title="Ver detalles">
+                    <i class="bi bi-eye"></i>Ver
+                  </a>
+                  {% if current_user.rol in ['Administrador', 'Director'] %}
+                    <a href="{{ url_for('becados.change_state', becado_id=becado.id) }}" 
+                       class="btn-action btn-edit" title="Cambiar estado">
+                      <i class="bi bi-pencil"></i>Editar
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    {% if current_user.rol in ['Administrador', 'Director'] %}
+      <div class="toolbar" id="bulk-actions" style="display: none;">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span id="selected-count">0</span> elemento(s) seleccionado(s)
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-warning" onclick="bulkAction('pause')">
+              <i class="bi bi-pause me-2"></i>Pausar
+            </button>
+            <button class="btn btn-outline-success" onclick="bulkAction('activate')">
+              <i class="bi bi-play me-2"></i>Activar
+            </button>
+            <button class="btn btn-outline-info" onclick="bulkAction('export')">
+              <i class="bi bi-download me-2"></i>Exportar Seleccionados
+            </button>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-mortarboard"></i>
+      <h3>No se encontraron becados</h3>
+      <p>No hay becados que coincidan con los filtros aplicados.</p>
+      <div class="mt-3">
+        <a href="{{ url_for('becados.list_all_becados') }}" class="btn btn-irsi-primary me-2">
+          <i class="bi bi-arrow-clockwise me-2"></i>Limpiar Filtros
+        </a>
+        {% if current_user.rol in ['Administrador', 'Director'] %}
+          <a href="{{ url_for('becados.list_aprobados') }}" class="btn btn-outline-primary">
+            <i class="bi bi-person-plus me-2"></i>Ver Aprobados
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Form validation
+  (function() {
+    'use strict';
+    window.addEventListener('load', function() {
+      var forms = document.getElementsByClassName('needs-validation');
+      var validation = Array.prototype.filter.call(forms, function(form) {
+        form.addEventListener('submit', function(event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    }, false);
+  })();
+
+  // Auto-submit form on filter change
+  document.addEventListener('DOMContentLoaded', function() {
+    const filterSelects = document.querySelectorAll('#estado, #cohorte, #modalidad');
+    filterSelects.forEach(select => {
+      select.addEventListener('change', function() {
+        this.form.submit();
+      });
+    });
+
+    // Checkbox functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const individualCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+    const bulkActionsDiv = document.getElementById('bulk-actions');
+    const selectedCountSpan = document.getElementById('selected-count');
+
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', function() {
+        individualCheckboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+        });
+        updateBulkActions();
+      });
+    }
+
+    individualCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateBulkActions);
+    });
+
+    function updateBulkActions() {
+      const checkedBoxes = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+      const count = checkedBoxes.length;
+      
+      if (selectedCountSpan) {
+        selectedCountSpan.textContent = count;
+      }
+      
+      if (bulkActionsDiv) {
+        bulkActionsDiv.style.display = count > 0 ? 'block' : 'none';
+      }
+      
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = count === individualCheckboxes.length && count > 0;
+        selectAllCheckbox.indeterminate = count > 0 && count < individualCheckboxes.length;
+      }
+    }
+  });
+
+  // Export functions
+  function exportData(format) {
+    const selectedIds = Array.from(document.querySelectorAll('tbody input[type="checkbox"]:checked'))
+                             .map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+      alert('Por favor selecciona al menos un becado para exportar.');
+      return;
+    }
+    
+    // Aquí implementarías la lógica de exportación
+    console.log(`Exportando ${selectedIds.length} becados en formato ${format}`);
+    // Ejemplo: window.location.href = `/export/becados/${format}?ids=${selectedIds.join(',')}`;
+  }
+
+  // Bulk actions
+  function bulkAction(action) {
+    const selectedIds = Array.from(document.querySelectorAll('tbody input[type="checkbox"]:checked'))
+                             .map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+      alert('Por favor selecciona al menos un becado.');
+      return;
+    }
+    
+    const actionMessages = {
+      'pause': '¿Estás seguro de pausar los becados seleccionados?',
+      'activate': '¿Estás seguro de activar los becados seleccionados?',
+      'export': 'Se exportarán los becados seleccionados.'
+    };
+    
+    if (confirm(actionMessages[action] || '¿Continuar con la acción?')) {
+      // Aquí implementarías la lógica de la acción masiva
+      console.log(`Ejecutando acción ${action} en becados:`, selectedIds);
+      // Ejemplo: 
+      // fetch('/bulk-action', {
+      //   method: 'POST',
+      //   headers: {'Content-Type': 'application/json'},
+      //   body: JSON.stringify({action: action, ids: selectedIds})
+      // });
+    }
+  }
+
+  // View toggle (future implementation)
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      
+      const view = this.dataset.view;
+      // Aquí implementarías el cambio de vista entre tabla y tarjetas
+      console.log(`Cambiando a vista: ${view}`);
+    });
+  });
+</script>
+{% endblock %}
