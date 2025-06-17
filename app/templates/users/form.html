@@ -1,49 +1,834 @@
 {% extends 'base.html' %}
-{% block title %}{% if user %}Editar Usuario{% else %}Crear Usuario{% endif %}{% endblock %}
+
+{% block title %}
+{% if user %}Editar Usuario - {{ user.nombre }}{% else %}Crear Nuevo Usuario{% endif %}
+{% endblock %}
+
+{% block head %}
+<style>
+  .form-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(30, 58, 138, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .form-header {
+    background: linear-gradient(135deg, var(--irsi-primary) 0%, var(--irsi-secondary) 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+  }
+
+  .form-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .form-header h2 {
+    margin: 0;
+    font-size: 2.2rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+  }
+
+  .form-header .subtitle {
+    margin-top: 0.5rem;
+    opacity: 0.9;
+    font-size: 1.1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .form-body {
+    padding: 2.5rem;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+  }
+
+  .form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    color: var(--irsi-primary);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-title i {
+    background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary));
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+
+  .form-floating {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-floating > .form-control,
+  .form-floating > .form-select {
+    height: calc(3.5rem + 2px);
+    line-height: 1.25;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+  }
+
+  .form-floating > .form-control:focus,
+  .form-floating > .form-select:focus {
+    border-color: var(--irsi-accent);
+    box-shadow: 0 0 0 0.2rem rgba(6, 182, 212, 0.15);
+    background-color: white;
+    transform: translateY(-1px);
+  }
+
+  .form-floating > label {
+    padding: 1rem 0.75rem;
+    color: var(--irsi-gray);
+    font-weight: 500;
+  }
+
+  .input-group-text {
+    background: linear-gradient(135deg, var(--irsi-light), white);
+    border: 2px solid #e2e8f0;
+    border-right: none;
+    color: var(--irsi-secondary);
+    border-radius: 12px 0 0 12px;
+  }
+
+  .input-group .form-control {
+    border-left: none;
+    border-radius: 0 12px 12px 0;
+  }
+
+  .password-strength {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: none;
+  }
+
+  .strength-bar {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+
+  .strength-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+  }
+
+  .strength-weak { background-color: #ef4444; }
+  .strength-fair { background-color: #f59e0b; }
+  .strength-good { background-color: #10b981; }
+  .strength-strong { background-color: #059669; }
+
+  .form-check-custom {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .form-check-custom:hover {
+    border-color: var(--irsi-accent);
+    background-color: rgba(6, 182, 212, 0.02);
+  }
+
+  .form-check-custom .form-check-input:checked {
+    background-color: var(--irsi-accent);
+    border-color: var(--irsi-accent);
+  }
+
+  .form-check-custom .form-check-label {
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-group-custom {
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(100, 116, 139, 0.1);
+  }
+
+  .btn-irsi-save {
+    background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary));
+    border: none;
+    color: white;
+    border-radius: 12px;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    min-width: 140px;
+  }
+
+  .btn-irsi-save:hover {
+    background: linear-gradient(135deg, var(--irsi-secondary), var(--irsi-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
+    color: white;
+  }
+
+  .btn-irsi-cancel {
+    background: transparent;
+    border: 2px solid var(--irsi-gray);
+    color: var(--irsi-gray);
+    border-radius: 12px;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    min-width: 140px;
+  }
+
+  .btn-irsi-cancel:hover {
+    background-color: var(--irsi-dark);
+    border-color: var(--irsi-dark);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: rgba(239, 68, 68, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid #ef4444;
+  }
+
+  .success-indicator {
+    color: #10b981;
+    background-color: rgba(16, 185, 129, 0.05);
+    border-left: 3px solid #10b981;
+  }
+
+  @media (max-width: 768px) {
+    .form-body {
+      padding: 1.5rem;
+    }
+    
+    .form-header {
+      padding: 1.5rem;
+    }
+    
+    .form-header h2 {
+      font-size: 1.8rem;
+    }
+    
+    .btn-group-custom {
+      flex-direction: column;
+    }
+    
+    .btn-irsi-save,
+    .btn-irsi-cancel {
+      width: 100%;
+    }
+  }
+
+  .avatar-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--irsi-accent), var(--irsi-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 auto 1rem;
+    border: 4px solid white;
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+  }
+
+  .user-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: white;
+    border: 2px solid #f1f5f9;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    border-color: var(--irsi-accent);
+    transform: translateY(-2px);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--irsi-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--irsi-gray);
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>{% if user %}Editar Usuario{% else %}Crear Usuario{% endif %}</h2>
-<form method="post">
-  {{ form.hidden_tag() }}
-  <div class="mb-3">
-    {{ form.nombre.label(class="form-label") }}
-    {{ form.nombre(class="form-control") }}
-    {% for error in form.nombre.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
+<div class="container-fluid px-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+      
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('main.index') }}" class="text-decoration-none">
+              <i class="bi bi-house"></i> Inicio
+            </a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('users.list_users') }}" class="text-decoration-none">Usuarios</a>
+          </li>
+          <li class="breadcrumb-item active">
+            {% if user %}Editar Usuario{% else %}Crear Usuario{% endif %}
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Stats Cards (Solo para edición) -->
+      {% if user %}
+      <div class="user-stats">
+        <div class="stat-card">
+          <div class="stat-value">
+            {% if user.ultimo_acceso %}
+              {{ user.ultimo_acceso.strftime('%d/%m/%Y') }}
+            {% else %}
+              Nunca
+            {% endif %}
+          </div>
+          <div class="stat-label">
+            <i class="bi bi-clock"></i> Último Acceso
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-value">{{ user.intentos_fallidos }}</div>
+          <div class="stat-label">
+            <i class="bi bi-shield-exclamation"></i> Intentos Fallidos
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-value">
+            {{ (now - user.fecha_creacion).days }} días
+          </div>
+          <div class="stat-label">
+            <i class="bi bi-calendar-plus"></i> Antigüedad
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Formulario Principal -->
+      <div class="form-card">
+        <div class="form-header">
+          {% if user %}
+            <div class="avatar-preview">{{ user.nombre[0].upper() }}</div>
+          {% else %}
+            <i class="bi bi-person-plus" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+          {% endif %}
+          
+          <h2>
+            {% if user %}
+              Editar Usuario
+            {% else %}
+              Crear Nuevo Usuario
+            {% endif %}
+          </h2>
+          
+          <p class="subtitle">
+            {% if user %}
+              Modifica la información del usuario {{ user.nombre }}
+            {% else %}
+              Complete todos los campos requeridos para crear un nuevo usuario
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="form-body">
+          <form method="post" id="userForm" novalidate>
+            {{ form.hidden_tag() }}
+
+            <!-- Sección: Información Personal -->
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="bi bi-person"></i>
+                Información Personal
+              </h3>
+
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="form-floating">
+                    {{ form.nombre(class="form-control", placeholder="Nombre completo", id="nombre") }}
+                    {{ form.nombre.label(for="nombre") }}
+                    <div class="invalid-feedback" id="nombre-error"></div>
+                  </div>
+                  {% for error in form.nombre.errors %}
+                    <div class="error-message">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ error }}
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-floating">
+                    {{ form.rol(class="form-select", id="rol") }}
+                    {{ form.rol.label(for="rol") }}
+                  </div>
+                  {% for error in form.rol.errors %}
+                    <div class="error-message">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ error }}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección: Credenciales -->
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="bi bi-envelope"></i>
+                Credenciales de Acceso
+              </h3>
+
+              <div class="form-floating">
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-envelope"></i>
+                  </span>
+                  {{ form.email(class="form-control", placeholder="correo@ejemplo.com", id="email") }}
+                </div>
+                <div class="invalid-feedback" id="email-error"></div>
+              </div>
+              {% for error in form.email.errors %}
+                <div class="error-message">
+                  <i class="bi bi-exclamation-circle"></i>
+                  {{ error }}
+                </div>
+              {% endfor %}
+            </div>
+
+            <!-- Sección: Contraseña -->
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="bi bi-key"></i>
+                {% if user %}Cambiar Contraseña (Opcional){% else %}Contraseña{% endif %}
+              </h3>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-lock"></i>
+                      </span>
+                      {{ form.password(class="form-control", placeholder="Contraseña", id="password", type="password") }}
+                      <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Indicador de fortaleza -->
+                  <div class="password-strength" id="passwordStrength">
+                    <div class="strength-bar">
+                      <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText"></div>
+                    <ul class="requirements-list" id="requirementsList">
+                      <li id="req-length">Mínimo 8 caracteres</li>
+                      <li id="req-upper">Una letra mayúscula</li>
+                      <li id="req-lower">Una letra minúscula</li>
+                      <li id="req-number">Un número</li>
+                    </ul>
+                  </div>
+                  
+                  {% for error in form.password.errors %}
+                    <div class="error-message">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ error }}
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-lock-fill"></i>
+                      </span>
+                      {{ form.confirm_password(class="form-control", placeholder="Confirmar contraseña", id="confirm_password", type="password") }}
+                    </div>
+                    <div class="invalid-feedback" id="confirm-password-error"></div>
+                  </div>
+                  {% for error in form.confirm_password.errors %}
+                    <div class="error-message">
+                      <i class="bi bi-exclamation-circle"></i>
+                      {{ error }}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección: Estado -->
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="bi bi-toggle-on"></i>
+                Estado del Usuario
+              </h3>
+
+              <div class="form-check-custom">
+                <div class="form-check form-switch">
+                  {{ form.activo(class="form-check-input", role="switch", id="activo") }}
+                  {{ form.activo.label(class="form-check-label", for="activo") }}
+                  <div class="ms-auto">
+                    <span class="badge bg-success" id="activeBadge" style="display: none;">Activo</span>
+                    <span class="badge bg-secondary" id="inactiveBadge" style="display: none;">Inactivo</span>
+                  </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                  Los usuarios inactivos no podrán acceder al sistema
+                </small>
+              </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex justify-content-end btn-group-custom">
+              <a href="{{ url_for('users.list_users') }}" class="btn btn-irsi-cancel">
+                <i class="bi bi-x-circle me-2"></i>
+                Cancelar
+              </a>
+              
+              <button type="submit" class="btn btn-irsi-save" id="submitBtn">
+                <i class="bi bi-check-circle me-2"></i>
+                {% if user %}Actualizar Usuario{% else %}Crear Usuario{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    {{ form.email.label(class="form-label") }}
-    {{ form.email(class="form-control") }}
-    {% for error in form.email.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    {{ form.rol.label(class="form-label") }}
-    {{ form.rol(class="form-select") }}
-    {% for error in form.rol.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    {{ form.password.label(class="form-label") }}
-    {{ form.password(class="form-control") }}
-    {% for error in form.password.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-3">
-    {{ form.confirm_password.label(class="form-label") }}
-    {{ form.confirm_password(class="form-control") }}
-    {% for error in form.confirm_password.errors %}
-      <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-  </div>
-  <div class="form-check mb-3">
-    {{ form.activo(class="form-check-input") }}
-    {{ form.activo.label(class="form-check-label") }}
-  </div>
-  <button type="submit" class="btn btn-primary">Guardar</button>
-  <a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">Cancelar</a>
-</form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('userForm');
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('confirm_password');
+    const togglePassword = document.getElementById('togglePassword');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+    const activoField = document.getElementById('activo');
+    const activeBadge = document.getElementById('activeBadge');
+    const inactiveBadge = document.getElementById('inactiveBadge');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Toggle password visibility
+    togglePassword.addEventListener('click', function() {
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+        confirmPasswordField.setAttribute('type', type);
+        
+        togglePasswordIcon.classList.toggle('bi-eye');
+        togglePasswordIcon.classList.toggle('bi-eye-slash');
+    });
+
+    // Password strength checker
+    passwordField.addEventListener('input', function() {
+        const password = this.value;
+        const strengthContainer = document.getElementById('passwordStrength');
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+        
+        if (password.length > 0) {
+            strengthContainer.style.display = 'block';
+            const strength = calculatePasswordStrength(password);
+            updatePasswordStrength(strength, strengthFill, strengthText);
+            checkPasswordRequirements(password);
+        } else {
+            strengthContainer.style.display = 'none';
+        }
+    });
+
+    // Password confirmation validation
+    confirmPasswordField.addEventListener('input', function() {
+        validatePasswordMatch();
+    });
+
+    passwordField.addEventListener('input', function() {
+        if (confirmPasswordField.value) {
+            validatePasswordMatch();
+        }
+    });
+
+    // Active/Inactive badge toggle
+    function updateActiveBadge() {
+        if (activoField.checked) {
+            activeBadge.style.display = 'inline-block';
+            inactiveBadge.style.display = 'none';
+        } else {
+            activeBadge.style.display = 'none';
+            inactiveBadge.style.display = 'inline-block';
+        }
+    }
+
+    activoField.addEventListener('change', updateActiveBadge);
+    updateActiveBadge(); // Initial state
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Clear previous errors
+        clearErrors();
+        
+        // Validate required fields
+        const nombre = document.getElementById('nombre');
+        const email = document.getElementById('email');
+        const isEditMode = {{ 'true' if user else 'false' }};
+        
+        if (!nombre.value.trim()) {
+            showError('nombre', 'Nombre es requerido');
+            isValid = false;
+        }
+        
+        if (!email.value.trim()) {
+            showError('email', 'Email es requerido');
+            isValid = false;
+        } else if (!isValidEmail(email.value)) {
+            showError('email', 'Email no es válido');
+            isValid = false;
+        }
+        
+        // Password validation (required for new users)
+        if (!isEditMode) {
+            if (!passwordField.value) {
+                showError('password', 'Contraseña es requerida');
+                isValid = false;
+            } else if (passwordField.value.length < 8) {
+                showError('password', 'La contraseña debe tener al menos 8 caracteres');
+                isValid = false;
+            }
+        }
+        
+        // Password match validation
+        if (passwordField.value && !validatePasswordMatch()) {
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        } else {
+            // Show loading state
+            submitBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Guardando...';
+            submitBtn.disabled = true;
+        }
+    });
+
+    // Helper functions
+    function calculatePasswordStrength(password) {
+        let score = 0;
+        
+        if (password.length >= 8) score += 25;
+        if (password.length >= 12) score += 25;
+        if (/[a-z]/.test(password)) score += 12.5;
+        if (/[A-Z]/.test(password)) score += 12.5;
+        if (/[0-9]/.test(password)) score += 12.5;
+        if (/[^A-Za-z0-9]/.test(password)) score += 12.5;
+        
+        return Math.min(100, score);
+    }
+
+    function updatePasswordStrength(strength, fillElement, textElement) {
+        fillElement.style.width = strength + '%';
+        
+        if (strength < 30) {
+            fillElement.className = 'strength-fill strength-weak';
+            textElement.textContent = 'Débil';
+        } else if (strength < 60) {
+            fillElement.className = 'strength-fill strength-fair';
+            textElement.textContent = 'Regular';
+        } else if (strength < 90) {
+            fillElement.className = 'strength-fill strength-good';
+            textElement.textContent = 'Buena';
+        } else {
+            fillElement.className = 'strength-fill strength-strong';
+            textElement.textContent = 'Excelente';
+        }
+    }
+
+    function checkPasswordRequirements(password) {
+        const requirements = {
+            'req-length': password.length >= 8,
+            'req-upper': /[A-Z]/.test(password),
+            'req-lower': /[a-z]/.test(password),
+            'req-number': /[0-9]/.test(password)
+        };
+
+        Object.entries(requirements).forEach(([id, met]) => {
+            const element = document.getElementById(id);
+            if (met) {
+                element.style.color = '#10b981';
+                element.innerHTML = '✓ ' + element.textContent.replace('✓ ', '');
+            } else {
+                element.style.color = '#ef4444';
+                element.innerHTML = '✗ ' + element.textContent.replace('✗ ', '').replace('✓ ', '');
+            }
+        });
+    }
+
+    function validatePasswordMatch() {
+        const password = passwordField.value;
+        const confirmPassword = confirmPasswordField.value;
+        
+        if (confirmPassword && password !== confirmPassword) {
+            showError('confirm_password', 'Las contraseñas no coinciden');
+            return false;
+        } else {
+            clearError('confirm_password');
+            if (confirmPassword && password === confirmPassword) {
+                showSuccess('confirm_password', 'Las contraseñas coinciden');
+            }
+            return true;
+        }
+    }
+
+    function showError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + '-error');
+        
+        field.classList.add('is-invalid');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function clearError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + '-error');
+        
+        field.classList.remove('is-invalid');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+    }
+
+    function clearErrors() {
+        const invalidFields = document.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        const errorDivs = document.querySelectorAll('[id$="-error"]');
+        errorDivs.forEach(div => {
+            div.style.display = 'none';
+        });
+    }
+
+    function showSuccess(fieldId, message) {
+        const errorDiv = document.getElementById(fieldId + '-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.className = 'success-indicator';
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Real-time validation
+    document.getElementById('nombre').addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            showError('nombre', 'Nombre es requerido');
+        } else {
+            clearError('nombre');
+        }
+    });
+
+    document.getElementById('email').addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            showError('email', 'Email es requerido');
+        } else if (!isValidEmail(this.value)) {
+            showError('email', 'Email no es válido');
+        } else {
+            clearError('email');
+        }
+    });
+});
+</script>
 {% endblock %}

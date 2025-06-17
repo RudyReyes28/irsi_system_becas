@@ -64,7 +64,7 @@ def edit_user(user_id):
         if user.email != form.email.data:
             if User.query.filter_by(email=form.email.data).first():
                 flash('El correo ya está en uso.', 'danger')
-                return render_template('users/form.html', form=form, user=user)
+                return render_template('users/form.html', form=form, user=user, now=datetime.utcnow())
             user.email = form.email.data
         user.rol = form.rol.data
         if form.password.data:
@@ -74,7 +74,7 @@ def edit_user(user_id):
         auditar_cambio(current_user.id, 'usuarios', 'UPDATE', user.id, datos_antes, datos_despues)
         flash('Usuario actualizado correctamente.', 'success')
         return redirect(url_for('users.list_users'))
-    return render_template('users/form.html', form=form, user=user)
+    return render_template('users/form.html', form=form, user=user, now=datetime.utcnow() )
 
 @users_bp.route('/<int:user_id>/toggle_active', methods=['POST'])
 @login_required
@@ -122,7 +122,7 @@ def reset_password(user_id):
         auditar_cambio(current_user.id, 'usuarios', 'UPDATE', user.id, datos_antes, datos_despues)
         flash('Contraseña restablecida correctamente.', 'success')
         return redirect(url_for('users.detail_user', user_id=user.id))
-    return render_template('reset_password.html', form=form, user=user)
+    return render_template('users/reset_password.html', form=form, user=user)
 
 # Agregar esta ruta a tu archivo de rutas users.py
 
