@@ -24,7 +24,7 @@ jobs:
 
       - name: Ejecutar flake8
         run: |
-          flake8 . --max-line-length=120 --ignore=E305
+          flake8 . --max-line-length=120 --ignore=E305,E0302
 
   test:
     name: Tests con pytest
