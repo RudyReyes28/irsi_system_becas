@@ -38,7 +38,10 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """Configuración para testing"""
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
+    WTF_CSRF_ENABLED = False          # desactiva CSRF en tests
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    LOGIN_DISABLED = True
 
 config = {
     'development': DevelopmentConfig,
