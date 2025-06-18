@@ -730,7 +730,7 @@ def list_reaplicaciones():
 
 @solicitantes_bp.route('/reportes', methods=['GET'])
 @login_required
-@require_role('Administrador', 'Director', 'Asistente')
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
 def reportes():
     from sqlalchemy import func, extract
     from datetime import datetime, timedelta
@@ -866,7 +866,7 @@ def reportes():
 
 @solicitantes_bp.route('/reportes/exportar', methods=['GET'])
 @login_required
-@require_role('Administrador', 'Director', 'Asistente')
+@require_role('Administrador', 'Director', 'Asistente', 'Consulta')
 def exportar_reporte():
     from flask import Response
     import json

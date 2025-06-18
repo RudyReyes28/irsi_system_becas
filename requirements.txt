@@ -15,3 +15,5 @@ openpyxl
 gunicorn
 requests
 pymssql
+pytest
+coverage

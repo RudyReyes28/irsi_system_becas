@@ -67,14 +67,14 @@
 <!-- Stats Cards -->
 <div class="row mb-4">
   <div class="col-md-3">
-    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));">
+    <div class="card border-0" style="background: linear-gradient(135deg, var(--irsi-primary), var(--irsi-secondary));">
       <div class="card-body text-white">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="card-title mb-0 opacity-75">Total Usuarios</h6>
+            <h6 class="card-title mb-0">Total Usuarios</h6>
             <h3 class="mb-0 fw-bold">{{ pagination.total }}</h3>
           </div>
-          <div class="opacity-75">
+          <div>
             <i class="bi bi-people fs-2"></i>
           </div>
         </div>
@@ -82,14 +82,14 @@
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, #28a745, #20c997);">
+    <div class="card border-0" style="background: linear-gradient(135deg, #28a745, #20c997);">
       <div class="card-body text-white">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="card-title mb-0 opacity-75">Usuarios Activos</h6>
+            <h6 class="card-title mb-0">Usuarios Activos</h6>
             <h3 class="mb-0 fw-bold">{{ pagination.items | selectattr('activo') | list | length }}</h3>
           </div>
-          <div class="opacity-75">
+          <div >
             <i class="bi bi-person-check fs-2"></i>
           </div>
         </div>
@@ -97,14 +97,14 @@
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+    <div class="card border-0 " style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
       <div class="card-body text-white">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="card-title mb-0 opacity-75">Administradores</h6>
+            <h6 class="card-title mb-0">Administradores</h6>
             <h3 class="mb-0 fw-bold">{{ pagination.items | selectattr('rol', 'equalto', 'Administrador') | list | length }}</h3>
           </div>
-          <div class="opacity-75">
+          <div>
             <i class="bi bi-shield-check fs-2"></i>
           </div>
         </div>
@@ -112,14 +112,14 @@
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card border-0 bg-gradient" style="background: linear-gradient(135deg, var(--irsi-accent), #0891b2);">
+    <div class="card border-0 " style="background: linear-gradient(135deg, var(--irsi-accent), #0891b2);">
       <div class="card-body text-white">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="card-title mb-0 opacity-75">Otros Roles</h6>
+            <h6 class="card-title mb-0">Otros Roles</h6>
             <h3 class="mb-0 fw-bold">{{ pagination.items | rejectattr('rol', 'equalto', 'Administrador') | list | length }}</h3>
           </div>
-          <div class="opacity-75">
+          <div >
             <i class="bi bi-person-gear fs-2"></i>
           </div>
         </div>
