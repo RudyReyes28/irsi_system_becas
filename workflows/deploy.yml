@@ -1,0 +1,35 @@
+name: Python CI/CD with Render
+
+on:
+  push:
+    branches:
+      - main  # o la rama que deseas usar para producción
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # Cambia según tu versión
+
+      - name: Crear entorno virtual e instalar dependencias
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar pruebas (si tienes)
+        run: |
+          source venv/bin/activate
+          pytest  # o el comando de pruebas que uses
+
+      - name: Desplegar a Render
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
