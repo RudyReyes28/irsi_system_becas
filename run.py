@@ -8,9 +8,18 @@ import requests
 config_name = os.environ.get('FLASK_ENV', 'development')
 app = create_app(config[config_name])
 
-ip = requests.get("https://api.ipify.org").text # nosec B104
-print(f"🔎 IP pública: {ip}") # nosec B104
+def obtener_ip_publica():
+    try:
+        response = requests.get("https://api.ipify.org", timeout=5)
+        response.raise_for_status()
+        ip = response.text
+        print(f"🔎 IP pública: {ip}")
+        return ip
+    except requests.RequestException as e:
+        print(f"❌ No se pudo obtener la IP pública: {e}")
+        return None
 
+obtener_ip_publica() # Ejecutar al inicio
 
 if __name__ == '__main__':
     app.run(
