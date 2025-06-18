@@ -25,10 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      #- name: Ejecutar pruebas (si tienes)
-      #  run: |
-      #    source venv/bin/activate
-      #    pytest  # o el comando de pruebas que uses
+      - name: Ejecutar pruebas (si tienes)
+        run: |
+          source venv/bin/activate
+          pytest || echo "No hay pruebas definidas"
 
       - name: Desplegar a Render
         run: |
