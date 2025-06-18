@@ -114,7 +114,7 @@ def list_all_becados():
 
 @becados_bp.route('/reportes', methods=['GET'])
 @login_required
-@require_role('Administrador', 'Director')
+@require_role('Administrador', 'Director', 'Consulta')
 def reportes():
     """Dashboard principal de reportes de becados"""
     from app.services.becados_service import (
@@ -155,7 +155,7 @@ def reportes():
 
 @becados_bp.route('/reportes/export', methods=['GET'])
 @login_required
-@require_role('Administrador', 'Director')
+@require_role('Administrador', 'Director', 'Consulta')
 def export_reporte():
     """Exportar reportes en formato Excel"""
     from app.services.becados_service import generar_reporte_excel
@@ -192,7 +192,7 @@ def export_reporte():
 
 @becados_bp.route('/reportes/detalle/<string:tipo>', methods=['GET'])
 @login_required
-@require_role('Administrador', 'Director')
+@require_role('Administrador', 'Director', 'Consulta')
 def reporte_detalle(tipo):
     """Reportes detallados por tipo específico"""
     from app.services.becados_service import obtener_reporte_detallado

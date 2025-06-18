@@ -379,9 +379,15 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{ url_for('becados.reportes') }}">
                   <i class="bi bi-graph-up"></i>
-                  Reportes
+                  Reportes Becados
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('solicitantes.reportes') }}">
+                  <i class="bi bi-graph-up"></i>
+                  Reportes Solicitantes
                 </a>
               </li>
 
@@ -402,14 +408,70 @@
                   </a></li>
                 </ul>
               </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-mortarboard"></i>
+                  Becados
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="{{ url_for('becados.list_becados') }}">
+                      <i class="bi bi-list-ul"></i>
+                      Becados Activos
+                    </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('becados.list_all_becados') }}">
+                      <i class="bi bi-grid-3x3-gap"></i>
+                      Todos los Becados
+                    </a></li>
+                  <li>
+                </ul>
+              </li>
+                    
 
             {% elif current_user.rol == 'Consulta' %}
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('solicitantes.list_solicitantes') }}">
-                  <i class="bi bi-search"></i>
-                  Consultar Información
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-person-lines-fill"></i>
+                  Consulta Solicitantes
                 </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="{{ url_for('solicitantes.list_solicitantes') }}">
+                    <i class="bi bi-list-ul"></i>
+                    Listar Solicitantes
+                  </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('solicitantes.list_reaplicaciones') }}">
+                        <i class="bi bi-arrow-repeat"></i>
+                        Ver Reaplicaciones
+                      </a></li>
+                      <li><a class="dropdown-item" href="{{ url_for('solicitantes.reportes') }}">
+                          <i class="bi bi-bar-chart"></i>
+                          Reportes y Estadísticas
+                        </a></li>
+                </ul>
               </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-mortarboard"></i>
+                  Consultar Becados
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="{{ url_for('becados.list_becados') }}">
+                      <i class="bi bi-list-ul"></i>
+                      Becados Activos
+                    </a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('becados.list_all_becados') }}">
+                      <i class="bi bi-grid-3x3-gap"></i>
+                      Todos los Becados
+                    </a></li>
+                  <li>
+                    <hr class="dropdown-divider">
+                  </li>
+                    <li><a class="dropdown-item" href="{{ url_for('becados.reportes') }}">
+                        <i class="bi bi-graph-up"></i>
+                        Reportes
+                      </a></li>
+                </ul>
+              </li>
+              
             {% endif %}
 
             <!-- Cerrar Sesión -->
