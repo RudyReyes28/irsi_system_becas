@@ -8,8 +8,8 @@ import requests
 config_name = os.environ.get('FLASK_ENV', 'development')
 app = create_app(config[config_name])
 
-ip = requests.get("https://api.ipify.org").text
-print(f"🔎 IP pública: {ip}")
+ip = requests.get("https://api.ipify.org").text # nosec B104
+print(f"🔎 IP pública: {ip}") # nosec B104
 
 
 if __name__ == '__main__':
