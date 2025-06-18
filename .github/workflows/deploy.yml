@@ -1,35 +1,84 @@
-name: Python CI/CD with Render
+name: Python CI/CD para Render
 
 on:
   push:
-    branches:
-      - main  # o la rama que deseas usar para producción
+    branches: [main]
 
 jobs:
-  build-and-deploy:
+  lint:
+    name: Linter (flake8)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout código
+      - name: Clonar repositorio
         uses: actions/checkout@v3
 
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # Cambia según tu versión
+          python-version: "3.11"
 
-      - name: Crear entorno virtual e instalar dependencias
+      - name: Instalar flake8
+        run: |
+          pip install flake8
+
+      - name: Ejecutar flake8
+        run: |
+          flake8 . --max-line-length=120
+
+  test:
+    name: Tests con pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
         run: |
           python -m venv venv
           source venv/bin/activate
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pytest
 
-      - name: Ejecutar pruebas (si tienes)
+      - name: Ejecutar pytest
         run: |
           source venv/bin/activate
-          pytest || echo "No hay pruebas definidas"
+          pytest || echo "No hay pruebas definidas" 
 
-      - name: Desplegar a Render
+  security:
+    name: Análisis de seguridad (Bandit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Instalar bandit
+        run: |
+          pip install bandit
+
+      - name: Ejecutar bandit
+        run: |
+          bandit -r . -ll
+
+  deploy:
+    name: Desplegar en Render
+    needs: [lint, test, security]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Llamar al webhook de Render
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
