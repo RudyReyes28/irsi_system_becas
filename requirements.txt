@@ -13,3 +13,4 @@ itsdangerous
 pandas
 openpyxl
 gunicorn
+requests
