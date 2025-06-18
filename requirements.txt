@@ -12,3 +12,4 @@ Flask-Mail
 itsdangerous
 pandas
 openpyxl
+gunicorn
